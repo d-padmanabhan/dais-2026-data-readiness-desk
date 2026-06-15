@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from data_readiness_desk.hmis import (
+    HMIS_INDICATOR_SERIALS,
     clean_hmis_text,
     hmis_rows_to_long_records,
     parse_hmis_measure_column,
@@ -34,6 +35,15 @@ def sample_hmis_row() -> dict[str, object]:
 def test_clean_hmis_text_removes_non_breaking_spaces() -> None:
     """HMIS text cleanup handles cp1252 non-breaking spaces."""
     assert clean_hmis_text("Number of PW given\xa0TT1") == "Number of PW given TT1"
+
+
+def test_hmis_indicator_serials_include_demo_measures() -> None:
+    """Curated HMIS mapping includes measures needed by the demo story."""
+    assert HMIS_INDICATOR_SERIALS["anc_registered"] == "1.1"
+    assert HMIS_INDICATOR_SERIALS["anc_four_plus"] == "1.2.7"
+    assert HMIS_INDICATOR_SERIALS["institutional_deliveries"] == "2.2"
+    assert HMIS_INDICATOR_SERIALS["fully_immunized_male"] == "9.2.4.a"
+    assert HMIS_INDICATOR_SERIALS["fully_immunized_female"] == "9.2.4.b"
 
 
 def test_parse_hmis_number_handles_unavailable_values() -> None:

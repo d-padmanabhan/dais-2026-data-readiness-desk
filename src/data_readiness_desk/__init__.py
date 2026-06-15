@@ -6,6 +6,7 @@ core behavior can be tested locally and reused by Databricks jobs or app code.
 """
 
 from data_readiness_desk.hmis import (
+    HMIS_INDICATOR_SERIALS,
     HmisLongRecord,
     HmisMeasureColumn,
     clean_hmis_text,
@@ -20,6 +21,7 @@ from data_readiness_desk.scoring import DimensionScore, ScoringConfig, TrustVerd
 
 __all__ = [
     "DimensionScore",
+    "HMIS_INDICATOR_SERIALS",
     "HmisLongRecord",
     "HmisMeasureColumn",
     "ParsedIndicator",

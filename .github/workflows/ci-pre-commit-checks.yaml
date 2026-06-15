@@ -52,7 +52,7 @@ on:
       - "uv.lock"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.ref }}-${{ github.workflow }}-${{ github.event_name }}
   cancel-in-progress: true
 
 permissions: {}

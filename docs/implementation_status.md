@@ -19,6 +19,8 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 - Databricks governance guidance for catalogs, grants, tags, storage, audit, and workspace binding.
 - Pure Python readiness and Trust Verdict scoring helpers with tests.
 - HMIS header/value parsing helpers for the currently uploaded state-grain file.
+- HMIS curated annual indicator totals for ANC, institutional delivery, births, and immunization.
+- HMIS state-grain fallback summary table for demo disease-lens exploration.
 - Mermaid diagrams and decision log.
 - GitHub Actions CI hardened for pre-commit and guarded Databricks validation.
 

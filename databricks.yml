@@ -4,13 +4,13 @@ bundle:
 variables:
   catalog:
     description: Unity Catalog catalog for hackathon tables.
-    default: hackathon
+    default: data_readiness_desk
   schema:
     description: Unity Catalog schema for bronze, silver, and gold tables.
-    default: virtue_foundation
+    default: pipeline
   source_volume_path:
     description: UC Volume directory containing the source CSV files.
-    default: /Volumes/${var.catalog}/${var.schema}/raw
+    default: /Volumes/${var.catalog}/bronze/files
   pincode_file:
     description: India Post PIN code directory CSV filename.
     default: india_post_pincode_directory.csv

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 sys.path.append(str(Path.cwd() / "src"))
 
-from data_readiness_desk.hmis import parse_hmis_measure_column  # noqa: E402
+from data_readiness_desk.hmis import HMIS_INDICATOR_SERIALS, parse_hmis_measure_column  # noqa: E402
 from data_readiness_desk.spark_helpers import (  # noqa: E402
     first_existing,
     normalize_column_text,
@@ -27,8 +27,8 @@ from data_readiness_desk.spark_helpers import (  # noqa: E402
     write_delta,
 )
 
-dbutils.widgets.text("catalog", "hackathon")
-dbutils.widgets.text("schema", "virtue_foundation")
+dbutils.widgets.text("catalog", "data_readiness_desk")
+dbutils.widgets.text("schema", "pipeline")
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
@@ -218,6 +218,28 @@ nfhs_silver = nfhs_wide.join(
     how="left",
 )
 hmis_long = parsed_hmis_long(hmis_bronze)
+hmis_indicator_serial_expr = F.create_map(
+    *[
+        item
+        for indicator_name, serial_number in HMIS_INDICATOR_SERIALS.items()
+        for item in (F.lit(serial_number), F.lit(indicator_name))
+    ]
+)
+hmis_indicator_totals = (
+    hmis_long.withColumn("indicator_name", hmis_indicator_serial_expr[F.col("serial_number")])
+    .where(F.col("indicator_name").isNotNull())
+    .where((F.col("month") == "Total") & (F.col("value_type") == "Total") & (F.col("reporting_type") == "TOTAL"))
+    .select(
+        "state_name",
+        "state_normalized",
+        "serial_number",
+        "indicator_name",
+        "parameter",
+        "value",
+        "geo_grain",
+        "source_period",
+    )
+)
 
 quality_checks = spark.createDataFrame(
     [
@@ -227,6 +249,7 @@ quality_checks = spark.createDataFrame(
         ("nfhs_indicator_columns_detected", "pass", nfhs_quality_long.select("indicator_name").distinct().count()),
         ("hmis_state_grain_detected", "pass", hmis_long.select("state_normalized").distinct().count()),
         ("hmis_invalid_numeric_count", "warn", hmis_long.filter(F.col("is_invalid_numeric")).count()),
+        ("hmis_curated_indicator_count", "pass", hmis_indicator_totals.select("indicator_name").distinct().count()),
     ],
     ["check_name", "status", "observed_value"],
 ).withColumn("_recorded_at_utc", F.current_timestamp())
@@ -236,6 +259,7 @@ write_delta(pin_lookup, catalog, schema, "silver_pincode_lookup")
 write_delta(nfhs_quality_long, catalog, schema, "silver_nfhs_indicator_quality_long")
 write_delta(nfhs_silver, catalog, schema, "silver_nfhs5_district_health_indicators")
 write_delta(hmis_long, catalog, schema, "silver_hmis_2019_20_long")
+write_delta(hmis_indicator_totals, catalog, schema, "silver_hmis_2019_20_indicator_totals")
 write_delta(quality_checks, catalog, schema, "pipeline_quality_checks")
 
 display(
@@ -246,6 +270,7 @@ display(
             ("silver_nfhs_indicator_quality_long", nfhs_quality_long.count()),
             ("silver_nfhs5_district_health_indicators", nfhs_silver.count()),
             ("silver_hmis_2019_20_long", hmis_long.count()),
+            ("silver_hmis_2019_20_indicator_totals", hmis_indicator_totals.count()),
         ],
         ["table_name", "row_count"],
     )

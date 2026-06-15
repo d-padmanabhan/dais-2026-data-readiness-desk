@@ -18,8 +18,8 @@ sys.path.append(str(Path.cwd() / "src"))
 
 from data_readiness_desk.spark_helpers import table_name  # noqa: E402
 
-dbutils.widgets.text("catalog", "hackathon")
-dbutils.widgets.text("schema", "virtue_foundation")
+dbutils.widgets.text("catalog", "data_readiness_desk")
+dbutils.widgets.text("schema", "pipeline")
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")

@@ -27,7 +27,7 @@ Recommended default:
 
 ## Catalog And Schema Pattern
 
-The hackathon examples use a compact demo catalog such as `drd` or the configured bundle catalog. For a production version, choose a catalog model intentionally:
+The hackathon examples use a compact demo catalog such as `data_readiness_desk` or the configured bundle catalog. For a production version, choose a catalog model intentionally:
 
 - Environment-first: `dev.raw`, `stage.curated`, `prod.serving`
 - Domain-first: `healthcare.raw`, `healthcare.curated`, `healthcare.serving`
@@ -87,8 +87,8 @@ Use Unity Catalog Volumes or external locations for source files. Do not place c
 
 Expected hackathon flow:
 
-1. Vibhu uploads source files into [data](../data/).
-1. Files are copied into a Unity Catalog Volume such as `/Volumes/drd/bronze/files/`.
+1. Source files are staged under [data](../data/).
+1. Files are copied into a Unity Catalog Volume such as `/Volumes/data_readiness_desk/bronze/files/`.
 1. Bronze notebooks read each file once and write Delta tables.
 1. Later phases read Delta tables only.
 
@@ -127,7 +127,7 @@ Useful system areas:
 These are acceptable for the hackathon but should be revisited before production:
 
 - Small local `data/` landing folder before upload to a Unity Catalog Volume.
-- Demo catalog naming such as `drd`.
+- Demo catalog naming such as `data_readiness_desk`.
 - Streamlit app scaffold with placeholder cached-read behavior.
 - Static fallback predictions if AutoML cannot be completed in time.
 - Limited source slices for HMIS and facilities.

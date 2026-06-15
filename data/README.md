@@ -33,9 +33,9 @@ The inspected `hmis_2019_20_slice.csv` file has these characteristics:
 ## Upload Command Template
 
 ```bash
-databricks fs cp data/Facilities.xlsx dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/india_post_pincode_directory.csv dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/hmis_2019_20_slice.csv dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/srs_2020_state.csv dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/india_districts.geojson dbfs:/Volumes/drd/bronze/files/
+databricks fs cp data/Facilities.xlsx dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/india_post_pincode_directory.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/hmis_2019_20_slice.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/srs_2020_state.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/india_districts.geojson dbfs:/Volumes/data_readiness_desk/bronze/files/
 ```

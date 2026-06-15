@@ -92,11 +92,11 @@ Key engineering references:
 
 ## Setup
 
-1. Create or choose a Unity Catalog catalog and schema for the hackathon, for example `hackathon.virtue_foundation`.
-1. Create a UC Volume directory for source files, for example `/Volumes/hackathon/virtue_foundation/raw`.
+1. Create or choose a Unity Catalog catalog and schema for the hackathon, for example `data_readiness_desk.pipeline`.
+1. Create a UC Volume directory for source files, for example `/Volumes/data_readiness_desk/bronze/files`.
 1. Upload the two source CSV files into that directory:
-   - `/Volumes/hackathon/virtue_foundation/raw/india_post_pincode_directory.csv`
-   - `/Volumes/hackathon/virtue_foundation/raw/nfhs5_district_health_indicators.csv`
+   - `/Volumes/data_readiness_desk/bronze/files/india_post_pincode_directory.csv`
+   - `/Volumes/data_readiness_desk/bronze/files/nfhs5_district_health_indicators.csv`
 1. Confirm the Databricks CLI is authenticated:
 
 ```bash
@@ -110,7 +110,7 @@ databricks bundle validate --target dev
 ```
 
 > [!NOTE]
-> The default variables assume `catalog=hackathon`, `schema=virtue_foundation`, and `source_volume_path=/Volumes/hackathon/virtue_foundation/raw`. Override these with bundle variables if your workspace uses different names.
+> The default variables assume `catalog=data_readiness_desk`, `schema=pipeline`, and `source_volume_path=/Volumes/data_readiness_desk/bronze/files`. Override these with bundle variables if your workspace uses different names.
 > This project intentionally uses [databricks.yml](databricks.yml) because it is the standard Databricks bundle entrypoint. Other YAML files use the `.yaml` extension. Databricks now calls Databricks Asset Bundles Declarative Automation Bundles, but the CLI command remains `databricks bundle`.
 
 ## Run the Pipeline
@@ -125,7 +125,7 @@ databricks bundle run virtue_foundation_pipeline --target dev
 Override variables if needed:
 
 ```bash
-databricks bundle run virtue_foundation_pipeline --target dev --var catalog=my_catalog --var schema=my_schema --var source_volume_path=/Volumes/my_catalog/my_schema/raw
+databricks bundle run virtue_foundation_pipeline --target dev --var catalog=my_catalog --var schema=my_schema --var source_volume_path=/Volumes/my_catalog/bronze/files
 ```
 
 You can also run the notebooks manually in Databricks in this order:
@@ -164,6 +164,7 @@ Gold tables:
 - `gold_district_verdicts`
 - `gold_fix_ranking`
 - `gold_coverage_predictions`
+- `gold_hmis_state_indicator_summary`
 
 ## Data Quality Position
 

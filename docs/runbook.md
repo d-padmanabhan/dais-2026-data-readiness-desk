@@ -37,7 +37,7 @@ Source files are tracked or staged under [data](../data/) before they are copied
 - `srs_2020_state.csv`
 - `india_districts.geojson`
 
-Copy these files to `/Volumes/drd/bronze/files/` or the configured source volume before running the bronze notebook. NFHS-5 may be referenced as a provided Databricks table instead of a local file.
+Copy these files to `/Volumes/data_readiness_desk/bronze/files/` or the configured source volume before running the bronze notebook. NFHS-5 may be referenced as a provided Databricks table instead of a local file.
 
 Current HMIS caveat: `hmis_2019_20_slice.csv` is present locally, but the inspected file is state-grain (`State`, `S.No.`, `Parameters`, `Type`, monthly value columns) and uses `cp1252` encoding. District-level disease reconciliation still needs either a district-grain HMIS extract or an explicit state-grain fallback story.
 
@@ -73,21 +73,21 @@ databricks bundle validate --target dev
 Create the demo catalog, schemas, and upload Volume:
 
 ```sql
-CREATE CATALOG IF NOT EXISTS drd;
-CREATE SCHEMA IF NOT EXISTS drd.bronze;
-CREATE SCHEMA IF NOT EXISTS drd.silver;
-CREATE SCHEMA IF NOT EXISTS drd.gold;
-CREATE VOLUME IF NOT EXISTS drd.bronze.files;
+CREATE CATALOG IF NOT EXISTS data_readiness_desk;
+CREATE SCHEMA IF NOT EXISTS data_readiness_desk.bronze;
+CREATE SCHEMA IF NOT EXISTS data_readiness_desk.silver;
+CREATE SCHEMA IF NOT EXISTS data_readiness_desk.gold;
+CREATE VOLUME IF NOT EXISTS data_readiness_desk.bronze.files;
 ```
 
 Upload local files from [data](../data/) to the Volume:
 
 ```bash
-databricks fs cp data/Facilities.xlsx dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/india_post_pincode_directory.csv dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/hmis_2019_20_slice.csv dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/srs_2020_state.csv dbfs:/Volumes/drd/bronze/files/
-databricks fs cp data/india_districts.geojson dbfs:/Volumes/drd/bronze/files/
+databricks fs cp data/Facilities.xlsx dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/india_post_pincode_directory.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/hmis_2019_20_slice.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/srs_2020_state.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
+databricks fs cp data/india_districts.geojson dbfs:/Volumes/data_readiness_desk/bronze/files/
 ```
 
 NFHS-5 may already exist as a provided Databricks table. Record its full table name before joining.
@@ -98,11 +98,11 @@ Goal: land every source as raw Delta once. Do not reread raw files in later phas
 
 Expected bronze tables:
 
-- `drd.bronze.facilities`
-- `drd.bronze.pincode`
-- `drd.bronze.hmis`
-- `drd.bronze.srs`
-- `drd.bronze.district_boundaries`
+- `data_readiness_desk.bronze.facilities`
+- `data_readiness_desk.bronze.pincode`
+- `data_readiness_desk.bronze.hmis`
+- `data_readiness_desk.bronze.srs`
+- `data_readiness_desk.bronze.district_boundaries`
 
 The current bundle already has bronze ingestion for PIN and NFHS foundation data. Extend it for facilities, HMIS, SRS, and district boundaries as files become available.
 
@@ -112,11 +112,11 @@ Silver is where grain discipline and denominator discipline live.
 
 Build or extend these outputs:
 
-- `drd.silver.facilities_geo`: facility points assigned to district polygons where valid coordinates exist.
-- `drd.silver.pincode_lookup`: one row per PIN with ambiguity flags.
-- `drd.silver.nfhs_indicator_quality_long`: NFHS values with suppressed/low-sample flags.
-- `drd.silver.hmis_long`: HMIS wide monthly values normalized to long form with `geo_grain`.
-- `drd.silver.srs_state`: state-grain weak anchor table.
+- `data_readiness_desk.silver.facilities_geo`: facility points assigned to district polygons where valid coordinates exist.
+- `data_readiness_desk.silver.pincode_lookup`: one row per PIN with ambiguity flags.
+- `data_readiness_desk.silver.nfhs_indicator_quality_long`: NFHS values with suppressed/low-sample flags.
+- `data_readiness_desk.silver.hmis_long`: HMIS wide monthly values normalized to long form with `geo_grain`.
+- `data_readiness_desk.silver.srs_state`: state-grain weak anchor table.
 
 Important rules:
 
@@ -131,11 +131,11 @@ Train or stub the model once, then batch-score to a gold table. Never train live
 
 Target output:
 
-- `drd.gold.coverage_predictions`
+- `data_readiness_desk.gold.coverage_predictions`
 
 Recommended path:
 
-1. Build `drd.silver.disease_training` from districts where NFHS and HMIS agree enough for training.
+1. Build `data_readiness_desk.silver.disease_training` from districts where NFHS and HMIS agree enough for training.
 1. Train AutoML once with a small timeout.
 1. Register the model or document a static fallback.
 1. Batch-score all demo entities and write predictions to gold.
@@ -148,11 +148,11 @@ Gold is the app contract. Compute all verdicts and fixes before the demo.
 
 Expected gold outputs:
 
-- `drd.gold.facility_verdicts`
-- `drd.gold.district_verdicts`
-- `drd.gold.fix_ranking`
-- `drd.gold.coverage_predictions`
-- `drd.gold.facility_caps`
+- `data_readiness_desk.gold.facility_verdicts`
+- `data_readiness_desk.gold.district_verdicts`
+- `data_readiness_desk.gold.fix_ranking`
+- `data_readiness_desk.gold.coverage_predictions`
+- `data_readiness_desk.gold.facility_caps`
 
 Rules:
 
@@ -181,9 +181,9 @@ Genie, if used, must be user-initiated and cached. Do not call Genie on keystrok
 Create and deploy the Databricks App after gold tables exist:
 
 ```bash
-databricks apps create drd-desk
-databricks sync ./app /Workspace/Users/<principal-or-user>/drd-app
-databricks apps deploy drd-desk --source-code-path /Workspace/Users/<principal-or-user>/drd-app
+databricks apps create data-readiness-desk-app
+databricks sync ./app /Workspace/Users/<principal-or-user>/data-readiness-desk-app
+databricks apps deploy data-readiness-desk-app --source-code-path /Workspace/Users/<principal-or-user>/data-readiness-desk-app
 ```
 
 Dry-run acceptance criteria:
@@ -243,6 +243,8 @@ Manual notebook order:
 - `silver_pincode_lookup` should have one row per PIN code.
 - `silver_nfhs_indicator_quality_long` should have one row per district and indicator cell.
 - `silver_hmis_2019_20_long` should show state-grain long-form rows with `geo_grain=state`.
+- `silver_hmis_2019_20_indicator_totals` should include annual totals for ANC, institutional delivery, births, and immunization demo measures.
+- `gold_hmis_state_indicator_summary` should publish state-grain fallback ratios with a caveat.
 - `pipeline_quality_checks` should show `pass` for required column and indicator-detection checks.
 - `gold_pincode_health_enrichment` should show match statuses, not just matched rows.
 - `gold_underserved_district_candidates` should produce ranked districts.
@@ -259,7 +261,7 @@ The ingestion notebook calls `CREATE CATALOG IF NOT EXISTS`. If your hackathon w
 Confirm the file paths in the Volume:
 
 ```bash
-databricks fs ls dbfs:/Volumes/<catalog>/<schema>/raw
+databricks fs ls dbfs:/Volumes/data_readiness_desk/bronze/files/
 ```
 
 The default file names are:

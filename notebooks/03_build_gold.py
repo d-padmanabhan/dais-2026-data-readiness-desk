@@ -18,8 +18,8 @@ sys.path.append(str(Path.cwd() / "src"))
 
 from data_readiness_desk.spark_helpers import require_columns, table_name, write_delta  # noqa: E402
 
-dbutils.widgets.text("catalog", "hackathon")
-dbutils.widgets.text("schema", "virtue_foundation")
+dbutils.widgets.text("catalog", "data_readiness_desk")
+dbutils.widgets.text("schema", "pipeline")
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
@@ -62,6 +62,7 @@ def metric_or_null(df: DataFrame, column: str | None, alias: str) -> Column:
 pincode_lookup = spark.table(table_name(catalog, schema, "silver_pincode_lookup"))
 pincode_offices = spark.table(table_name(catalog, schema, "silver_pincode_post_offices"))
 nfhs = spark.table(table_name(catalog, schema, "silver_nfhs5_district_health_indicators"))
+hmis_indicator_totals = spark.table(table_name(catalog, schema, "silver_hmis_2019_20_indicator_totals"))
 
 require_columns(
     pincode_lookup,
@@ -77,6 +78,11 @@ require_columns(
     nfhs,
     {"district_name", "district_normalized", "state_name", "state_normalized"},
     "silver_nfhs5_district_health_indicators",
+)
+require_columns(
+    hmis_indicator_totals,
+    {"indicator_name", "state_name", "state_normalized", "value"},
+    "silver_hmis_2019_20_indicator_totals",
 )
 
 district_postal_summary = (
@@ -163,8 +169,40 @@ underserved_candidates = planning_metrics.withColumn(
     ).otherwise(F.lit("standard")),
 )
 
+hmis_state_pivot = (
+    hmis_indicator_totals.groupBy("state_name", "state_normalized")
+    .pivot("indicator_name")
+    .agg(F.first("value", ignorenulls=True))
+)
+
+hmis_state_indicator_summary = (
+    hmis_state_pivot.withColumn(
+        "live_births",
+        F.coalesce(F.col("live_birth_male"), F.lit(0)) + F.coalesce(F.col("live_birth_female"), F.lit(0)),
+    )
+    .withColumn(
+        "fully_immunized_children",
+        F.coalesce(F.col("fully_immunized_male"), F.lit(0)) + F.coalesce(F.col("fully_immunized_female"), F.lit(0)),
+    )
+    .withColumn(
+        "anc_four_plus_rate_percent",
+        F.when(F.col("anc_registered") > 0, F.col("anc_four_plus") / F.col("anc_registered") * 100.0),
+    )
+    .withColumn(
+        "institutional_delivery_to_live_birth_ratio_percent",
+        F.when(F.col("live_births") > 0, F.col("institutional_deliveries") / F.col("live_births") * 100.0),
+    )
+    .withColumn(
+        "fully_immunized_to_live_birth_ratio_percent",
+        F.when(F.col("live_births") > 0, F.col("fully_immunized_children") / F.col("live_births") * 100.0),
+    )
+    .withColumn("geo_grain", F.lit("state"))
+    .withColumn("data_caution", F.lit("state_grain_hmis_fallback_not_district_reconciliation"))
+)
+
 write_delta(district_health_context, catalog, schema, "gold_district_health_context")
 write_delta(pincode_enrichment, catalog, schema, "gold_pincode_health_enrichment")
 write_delta(underserved_candidates, catalog, schema, "gold_underserved_district_candidates")
+write_delta(hmis_state_indicator_summary, catalog, schema, "gold_hmis_state_indicator_summary")
 
 display(underserved_candidates.orderBy(F.desc("demand_side_need_score")).limit(25))

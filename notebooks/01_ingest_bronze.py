@@ -18,9 +18,9 @@ sys.path.append(str(Path.cwd() / "src"))
 
 from data_readiness_desk.spark_helpers import read_csv, table_name, with_ingest_metadata, write_delta  # noqa: E402
 
-dbutils.widgets.text("catalog", "hackathon")
-dbutils.widgets.text("schema", "virtue_foundation")
-dbutils.widgets.text("source_volume_path", "/Volumes/hackathon/virtue_foundation/raw")
+dbutils.widgets.text("catalog", "data_readiness_desk")
+dbutils.widgets.text("schema", "pipeline")
+dbutils.widgets.text("source_volume_path", "/Volumes/data_readiness_desk/bronze/files")
 dbutils.widgets.text("pincode_file", "india_post_pincode_directory.csv")
 dbutils.widgets.text("nfhs_file", "nfhs5_district_health_indicators.csv")
 dbutils.widgets.text("hmis_file", "hmis_2019_20_slice.csv")

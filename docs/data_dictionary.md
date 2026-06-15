@@ -176,6 +176,31 @@ Key columns:
 - `source_period`
 - `_recorded_at_utc`
 
+### `silver_hmis_2019_20_indicator_totals`
+
+Curated annual state-grain HMIS indicators for the disease-lens fallback story.
+
+Key columns:
+
+- `state_name`
+- `state_normalized`
+- `serial_number`
+- `indicator_name`
+- `parameter`
+- `value`
+- `geo_grain`
+- `source_period`
+
+Curated indicators:
+
+- `anc_registered`
+- `anc_four_plus`
+- `institutional_deliveries`
+- `live_birth_male`
+- `live_birth_female`
+- `fully_immunized_male`
+- `fully_immunized_female`
+
 ### `pipeline_quality_checks`
 
 Run-level readiness checks emitted by the silver pipeline.
@@ -228,3 +253,24 @@ Key columns:
 - `child_stunting_percent`
 - `post_office_count`
 - `data_caution`
+
+### `gold_hmis_state_indicator_summary`
+
+State-grain HMIS fallback table for demo disease-lens exploration.
+
+Key columns:
+
+- `state_name`
+- `state_normalized`
+- `anc_registered`
+- `anc_four_plus`
+- `institutional_deliveries`
+- `live_births`
+- `fully_immunized_children`
+- `anc_four_plus_rate_percent`
+- `institutional_delivery_to_live_birth_ratio_percent`
+- `fully_immunized_to_live_birth_ratio_percent`
+- `geo_grain`
+- `data_caution`
+
+Important caveat: this is a state-grain fallback, not district-level disease reconciliation.

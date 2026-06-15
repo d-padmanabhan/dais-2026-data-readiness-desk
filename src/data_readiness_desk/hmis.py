@@ -22,6 +22,15 @@ from data_readiness_desk.normalization import normalize_place_name
 MONTH_COLUMN_PATTERN = re.compile(r"^(?P<month>[A-Za-z]+|Total)\s+-\s+(?P<value_type>[^\[]+)")
 REQUIRED_HMIS_COLUMNS = frozenset({"State", "S.No.", "Parameters", "Type"})
 UNAVAILABLE_VALUES = frozenset({"", "NA", "N/A", "NULL", "-"})
+HMIS_INDICATOR_SERIALS = {
+    "anc_registered": "1.1",
+    "anc_four_plus": "1.2.7",
+    "institutional_deliveries": "2.2",
+    "live_birth_male": "4.1.1.a",
+    "live_birth_female": "4.1.1.b",
+    "fully_immunized_male": "9.2.4.a",
+    "fully_immunized_female": "9.2.4.b",
+}
 
 
 @dataclass(frozen=True)
