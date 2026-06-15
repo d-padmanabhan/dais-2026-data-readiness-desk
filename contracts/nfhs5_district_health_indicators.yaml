@@ -1,0 +1,32 @@
+---
+dataset: nfhs5_district_health_indicators
+owner: data-readiness-desk-team
+source: data.gov.in NFHS-5 district health indicators
+grain: district
+classification: public
+required_geography_columns:
+  accepted_state_columns:
+    - state
+    - state_ut
+    - state_name
+    - states_ut
+  accepted_district_columns:
+    - district
+    - district_name
+    - districts
+quality_rules:
+  - name: geography_columns_detected
+    severity: fail
+    description: The silver pipeline must identify both state and district fields.
+  - name: suppressed_values_are_null
+    severity: fail
+    description: Asterisk values must be parsed as null, not zero.
+  - name: low_sample_estimates_are_flagged
+    severity: warn
+    description: Parenthesized numeric values must be parsed and flagged as low-sample estimates.
+  - name: indicator_quality_long_is_preserved
+    severity: fail
+    description: Cell-level quality flags must be available for downstream explanation.
+notes:
+  - Indicator definitions and district boundaries should be checked before comparing NFHS-5 to later survey waves.
+  - District name joins are approximate and should be replaced by spatial joins when facility coordinates are available.

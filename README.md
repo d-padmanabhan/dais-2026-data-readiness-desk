@@ -23,6 +23,7 @@ Our focus is to make uncertain healthcare geography and public-health indicators
   - [What This Builds](#what-this-builds)
   - [Data Sources](#data-sources)
   - [Project Layout](#project-layout)
+  - [Developer Workflow](#developer-workflow)
   - [Setup](#setup)
   - [Run the Pipeline](#run-the-pipeline)
   - [Outputs](#outputs)
@@ -59,8 +60,30 @@ Both datasets are public-sector datasets published through data.gov.in under the
 - [notebooks/03_build_gold.py](notebooks/03_build_gold.py): enrichment-ready gold outputs
 - [notebooks/04_demo_queries.py](notebooks/04_demo_queries.py): demo queries and an agent prompt
 - [src/hackathon_2026](src/hackathon_2026): reusable helpers with local tests
-- [docs](docs): architecture, data quality, and demo narrative
+- [contracts](contracts): machine-readable source dataset contracts and quality expectations
+- [docs](docs): architecture, diagrams, decision log, data quality, and demo narrative
 - [tests](tests): local tests for pure Python normalization helpers
+
+## Developer Workflow
+
+Use [justfile](justfile) for discoverable local commands:
+
+```bash
+just --list
+just install
+just ci
+just validate-bundle dev
+```
+
+Copy [.env.example](.env.example) when configuring local Databricks OAuth credentials. Never commit real `.env` files.
+
+Key engineering references:
+
+- [Architecture](docs/architecture.md)
+- [Diagrams](docs/diagrams.md)
+- [Decision Log](docs/decision_log.md)
+- [Data Quality Decisions](docs/data_quality.md)
+- [Data Dictionary](docs/data_dictionary.md)
 
 ## Setup
 

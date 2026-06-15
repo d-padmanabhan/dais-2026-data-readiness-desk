@@ -1,0 +1,4 @@
+circlename,regionname,divisionname,officename,pincode,officetype,delivery,district,statename,latitude,longitude
+Circle A,Region A,Division A,Office One,110001,PO,Delivery,New Delhi,Delhi,28.6139,77.2090
+Circle A,Region A,Division A,Office Two,110001,BO,Delivery,Central Delhi,Delhi,NA,NA
+Circle B,Region B,Division B,Office Three,560001,PO,Delivery,Bengaluru Urban,Karnataka,12.9716,77.5946

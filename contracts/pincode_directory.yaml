@@ -1,0 +1,34 @@
+---
+dataset: india_post_pincode_directory
+owner: data-readiness-desk-team
+source: data.gov.in India Post PIN Code Directory
+grain: post_office
+classification: public
+required_columns:
+  - circlename
+  - regionname
+  - divisionname
+  - officename
+  - pincode
+  - officetype
+  - delivery
+  - district
+  - statename
+  - latitude
+  - longitude
+quality_rules:
+  - name: pincode_is_six_digits_after_normalization
+    severity: fail
+    description: PIN codes must normalize to a six-character numeric string.
+  - name: lookup_is_one_row_per_pincode
+    severity: fail
+    description: Silver lookup output must not fan out by post-office rows.
+  - name: ambiguous_pincode_geography_is_flagged
+    severity: fail
+    description: PIN codes mapping to multiple districts or states must set is_geography_ambiguous.
+  - name: missing_coordinates_are_null
+    severity: warn
+    description: Source NA coordinates must become null, not strings.
+notes:
+  - Direct joins from facilities to source post-office rows are not allowed because they can fan out records.
+  - PIN-derived district and state should be treated as enrichment hints, not verified administrative boundaries.
