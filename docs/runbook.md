@@ -234,12 +234,14 @@ databricks bundle run virtue_foundation_pipeline --target dev
 
 Manual notebook order:
 
+1. [00_preflight.py](../notebooks/00_preflight.py)
 1. [01_ingest_bronze.py](../notebooks/01_ingest_bronze.py)
 1. [02_build_silver.py](../notebooks/02_build_silver.py)
 1. [03_build_gold.py](../notebooks/03_build_gold.py)
 1. [04_demo_queries.py](../notebooks/04_demo_queries.py)
 
-- `pipeline_run_summary` should show a row count for both bronze source tables.
+- Preflight should fail fast if the source Volume path or required files are missing.
+- `pipeline_run_summary` should show a row count for bronze source tables.
 - `silver_pincode_lookup` should have one row per PIN code.
 - `silver_nfhs_indicator_quality_long` should have one row per district and indicator cell.
 - `silver_hmis_2019_20_long` should show state-grain long-form rows with `geo_grain=state`.

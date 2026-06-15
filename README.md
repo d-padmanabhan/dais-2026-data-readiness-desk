@@ -130,6 +130,7 @@ databricks bundle run virtue_foundation_pipeline --target dev --var catalog=my_c
 
 You can also run the notebooks manually in Databricks in this order:
 
+1. [notebooks/00_preflight.py](notebooks/00_preflight.py)
 1. [notebooks/01_ingest_bronze.py](notebooks/01_ingest_bronze.py)
 1. [notebooks/02_build_silver.py](notebooks/02_build_silver.py)
 1. [notebooks/03_build_gold.py](notebooks/03_build_gold.py)

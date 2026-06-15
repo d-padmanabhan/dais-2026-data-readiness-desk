@@ -12,6 +12,7 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 ## Implemented
 
 - Databricks bundle scaffold with dev, staging, and prod validation targets.
+- Serverless-compatible Databricks job tasks and preflight source-file validation.
 - PIN and NFHS foundation pipeline for bronze, silver, and gold readiness tables.
 - PIN ambiguity handling with one-row-per-PIN readiness summaries.
 - NFHS suppressed and low-sample parsing rules.
