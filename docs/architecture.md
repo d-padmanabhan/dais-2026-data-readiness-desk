@@ -86,6 +86,7 @@ Gold creates outputs for the hackathon story:
 
 - [Diagrams](diagrams.md)
 - [Decision Log](decision_log.md)
+- [Governance](governance.md)
 - [Implementation Status](implementation_status.md)
 - [Data Quality Decisions](data_quality.md)
 - [Data Dictionary](data_dictionary.md)

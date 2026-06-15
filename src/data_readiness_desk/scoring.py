@@ -1,4 +1,10 @@
-"""Trust Verdict scoring helpers for the Data Readiness Desk."""
+"""
+Compute Trust Verdict scores for the Data Readiness Desk.
+
+The scoring helpers implement the conservative product rule from the requirements:
+numeric scores are weighted averages, while display bands are capped by the
+weakest dimension and by missing or low-confidence evidence.
+"""
 
 from __future__ import annotations
 
@@ -7,7 +13,14 @@ from enum import StrEnum
 
 
 class VerdictBand(StrEnum):
-    """Display bands for trust verdicts."""
+    """
+    Display bands for trust verdicts.
+
+    Values:
+        GREEN: Data is strong enough for the requested planning use.
+        AMBER: Data can be used with caveats or requires follow-up.
+        RED: Data is not trustworthy enough for the requested planning use.
+    """
 
     GREEN = "green"
     AMBER = "amber"
@@ -16,7 +29,8 @@ class VerdictBand(StrEnum):
 
 @dataclass(frozen=True)
 class ScoringConfig:
-    """Tunable score thresholds.
+    """
+    Tunable score thresholds.
 
     Args:
         green_min: Minimum numeric score for a green band.
@@ -29,7 +43,8 @@ class ScoringConfig:
 
 @dataclass(frozen=True)
 class DimensionScore:
-    """A scored trust dimension.
+    """
+    A scored trust dimension.
 
     Args:
         name: Dimension name shown in the verdict reason.
@@ -47,7 +62,8 @@ DEFAULT_SCORING_CONFIG = ScoringConfig()
 
 @dataclass(frozen=True)
 class TrustVerdict:
-    """Trust verdict shown by the app.
+    """
+    Trust verdict shown by the app.
 
     Args:
         band: Green, amber, or red display band.
@@ -63,7 +79,8 @@ class TrustVerdict:
 
 
 def band_for_score(score: float, config: ScoringConfig = DEFAULT_SCORING_CONFIG) -> VerdictBand:
-    """Convert a numeric score to a band.
+    """
+    Convert a numeric score to a band.
 
     Args:
         score: Numeric score in the inclusive range 0.0 to 1.0.
@@ -80,7 +97,8 @@ def band_for_score(score: float, config: ScoringConfig = DEFAULT_SCORING_CONFIG)
 
 
 def cap_band(current: VerdictBand, cap: VerdictBand) -> VerdictBand:
-    """Apply a weakest-link cap to a verdict band.
+    """
+    Apply a weakest-link cap to a verdict band.
 
     Args:
         current: Current band.
@@ -102,7 +120,8 @@ def compute_trust_verdict(
     weights: dict[str, float] | None = None,
     config: ScoringConfig = DEFAULT_SCORING_CONFIG,
 ) -> TrustVerdict:
-    """Compute a conservative Trust Verdict.
+    """
+    Compute a conservative Trust Verdict.
 
     Args:
         dimensions: Dimension scores for an entity/question.

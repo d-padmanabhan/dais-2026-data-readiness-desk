@@ -12,9 +12,7 @@ __pycache__/
 dist/
 build/
 .DS_Store
-data/raw/
-data/bronze/
-data/silver/
-data/gold/
+data/*
+!data/README.md
 tmp/
 *.log

@@ -85,6 +85,7 @@ Key engineering references:
 - [Architecture](docs/architecture.md)
 - [Diagrams](docs/diagrams.md)
 - [Decision Log](docs/decision_log.md)
+- [Governance](docs/governance.md)
 - [Implementation Status](docs/implementation_status.md)
 - [Data Quality Decisions](docs/data_quality.md)
 - [Data Dictionary](docs/data_dictionary.md)

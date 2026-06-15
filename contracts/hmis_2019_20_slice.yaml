@@ -2,23 +2,55 @@
 dataset: hmis_2019_20_slice
 owner: data-readiness-desk-team
 source: data.gov.in HMIS district slice
-grain: district_indicator
+grain: state_parameter_month_type
 classification: public
 expected_file: data/hmis_2019_20_slice.csv
 scope: small_slice_2_to_3_states
+encoding: cp1252
 required_columns:
-  - state
-  - district
+  - State
+  - S.No.
+  - Parameters
+  - Type
+wide_value_columns:
+  pattern: "<Month> - <Value Type>"
+  months:
+    - April
+    - May
+    - June
+    - July
+    - August
+    - September
+    - October
+    - November
+    - December
+    - January
+    - February
+    - March
+    - Total
+  value_types:
+    - Total
+    - Public
+    - Private
+    - Urban
+    - Rural
 quality_rules:
+  - name: source_encoding_documented
+    severity: fail
+    description: File must be read with cp1252 or equivalent tolerant encoding because it contains non-UTF-8 bytes.
+  - name: wide_month_columns_parse
+    severity: fail
+    description: Month/value-type columns must be parsed into long-form month and value_type fields.
   - name: denominator_formula_documented
     severity: fail
     description: HMIS numerators must be converted to comparable rates with an explicit denominator formula.
   - name: geo_grain_present
     severity: fail
-    description: Silver outputs must include geo_grain=district.
+    description: Silver outputs must include geo_grain=state unless a district-level HMIS slice is uploaded later.
   - name: source_period_visible
     severity: warn
     description: HMIS source period must be visible when comparing to NFHS-5.
 notes:
   - Institutional delivery is the hero reconciliation indicator.
   - HMIS values should not be compared directly to NFHS percentages without denominator normalization.
+  - The currently uploaded file has no district column. District-level disease reconciliation requires a district-grain HMIS slice or an explicit state-grain fallback.

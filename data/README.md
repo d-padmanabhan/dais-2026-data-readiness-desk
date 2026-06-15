@@ -14,6 +14,19 @@ Place these files directly under `data/`:
 
 NFHS-5 district health indicators may be available as a Databricks table instead of a local file. If a local CSV is used, document its filename in [docs/runbook.md](../docs/runbook.md) before ingesting it.
 
+## Current Upload Status
+
+Currently present:
+
+- `hmis_2019_20_slice.csv`
+
+Current HMIS observations:
+
+- Encoding: `cp1252`
+- Shape: 20,368 rows and 69 columns
+- Grain: state + parameter + type + monthly value columns
+- Missing for district-level disease reconciliation: a district column or separate district-grain HMIS extract
+
 ## Handling Rules
 
 - Keep these files as small hackathon slices. Do not ingest full-nation datasets unless the demo scope changes.

@@ -1,4 +1,10 @@
-"""Pure Python normalization helpers for source-specific cleanup rules."""
+"""
+Normalize public-sector source fields for the Data Readiness Desk.
+
+This module contains pure Python helpers used by tests and notebook-adjacent
+code. It intentionally avoids Spark dependencies so value parsing and naming
+rules can be validated locally before running Databricks jobs.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +20,15 @@ _NUMBER_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 
 @dataclass(frozen=True)
 class ParsedIndicator:
-    """Parsed NFHS indicator value and quality flags."""
+    """
+    Parsed NFHS indicator value and quality flags.
+
+    Args:
+        raw_value: Original source cell text, or None when the source is null.
+        value: Parsed numeric value, or None when unavailable.
+        is_suppressed: Whether the source value was an NFHS suppressed marker.
+        is_low_sample_estimate: Whether the value came from a parenthesized low-sample estimate.
+    """
 
     raw_value: str | None
     value: float | None
@@ -23,7 +37,15 @@ class ParsedIndicator:
 
 
 def to_snake_case(value: str) -> str:
-    """Convert a human-readable column name to stable snake_case."""
+    """
+    Convert a human-readable column name to stable snake_case.
+
+    Args:
+        value: Source column name.
+
+    Returns:
+        ASCII snake_case column name safe for Delta table fields.
+    """
     normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     normalized = normalized.replace("%", " percent ")
     normalized = normalized.replace("&", " and ")
@@ -33,7 +55,15 @@ def to_snake_case(value: str) -> str:
 
 
 def normalize_place_name(value: str | None) -> str | None:
-    """Normalize district/state strings for approximate joins and grouping."""
+    """
+    Normalize district and state strings for approximate joins and grouping.
+
+    Args:
+        value: Source place name.
+
+    Returns:
+        Normalized place name, or None when the input is empty.
+    """
     if value is None:
         return None
 
@@ -46,13 +76,20 @@ def normalize_place_name(value: str | None) -> str | None:
 
 
 def parse_nfhs_indicator(value: object) -> ParsedIndicator:
-    """Parse NFHS indicator cells.
+    """
+    Parse NFHS indicator cells.
 
     Rules:
     - `*` and empty values are unavailable and become null
     - `(29.5)` becomes 29.5 and is flagged as a low-sample estimate
     - numeric strings become floats
     - non-numeric cells become null without being marked suppressed
+
+    Args:
+        value: Raw NFHS cell value.
+
+    Returns:
+        Parsed indicator value and quality flags.
     """
     if value is None:
         return ParsedIndicator(None, None, False, False)

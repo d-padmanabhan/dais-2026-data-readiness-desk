@@ -1,4 +1,10 @@
-"""Small PySpark helpers used by Databricks notebooks."""
+"""
+Provide small PySpark helpers used by Databricks notebooks.
+
+These helpers keep notebook code thin and reproducible. They centralize table
+naming, CSV read options, metadata stamping, and contract checks that are shared
+across bronze, silver, and gold notebooks.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +17,8 @@ from data_readiness_desk.normalization import to_snake_case
 
 
 def table_name(catalog: str, schema: str, table: str) -> str:
-    """Return a Unity Catalog three-part table name.
+    """
+    Return a Unity Catalog three-part table name.
 
     Args:
         catalog: Unity Catalog catalog name.
@@ -25,7 +32,8 @@ def table_name(catalog: str, schema: str, table: str) -> str:
 
 
 def read_csv(spark: SparkSession, path: str) -> DataFrame:
-    """Read a source CSV with options suitable for public-sector extracts.
+    """
+    Read a source CSV with options suitable for public-sector extracts.
 
     Args:
         spark: Active Spark session.
@@ -44,7 +52,8 @@ def read_csv(spark: SparkSession, path: str) -> DataFrame:
 
 
 def with_ingest_metadata(df: DataFrame, source_file: str, layer: str) -> DataFrame:
-    """Add reproducibility metadata to a dataframe before publishing.
+    """
+    Add reproducibility metadata to a dataframe before publishing.
 
     Args:
         df: Source dataframe.
@@ -62,7 +71,8 @@ def with_ingest_metadata(df: DataFrame, source_file: str, layer: str) -> DataFra
 
 
 def write_delta(df: DataFrame, catalog: str, schema: str, table: str) -> None:
-    """Overwrite a managed Delta table with schema evolution.
+    """
+    Overwrite a managed Delta table with schema evolution.
 
     Args:
         df: Dataframe to publish.
@@ -79,7 +89,8 @@ def write_delta(df: DataFrame, catalog: str, schema: str, table: str) -> None:
 
 
 def normalize_column_text(column: str) -> Column:
-    """Normalize a text column for approximate state and district matching.
+    """
+    Normalize a text column for approximate state and district matching.
 
     Args:
         column: Input column name.
@@ -94,7 +105,8 @@ def normalize_column_text(column: str) -> Column:
 
 
 def rename_columns(df: DataFrame) -> DataFrame:
-    """Rename dataframe columns to unique snake_case names.
+    """
+    Rename dataframe columns to unique snake_case names.
 
     Args:
         df: Input dataframe.
@@ -114,7 +126,8 @@ def rename_columns(df: DataFrame) -> DataFrame:
 
 
 def first_existing(columns: list[str], candidates: list[str]) -> str | None:
-    """Return the first candidate column that exists.
+    """
+    Return the first candidate column that exists.
 
     Args:
         columns: Available dataframe columns.
@@ -130,7 +143,8 @@ def first_existing(columns: list[str], candidates: list[str]) -> str | None:
 
 
 def require_columns(df: DataFrame, required_columns: set[str], dataset_name: str) -> None:
-    """Fail fast when a required dataset contract column is missing.
+    """
+    Fail fast when a required dataset contract column is missing.
 
     Args:
         df: Dataframe to validate.
@@ -146,7 +160,8 @@ def require_columns(df: DataFrame, required_columns: set[str], dataset_name: str
 
 
 def current_run_id(prefix: str) -> str:
-    """Build a simple run id for notebook logs and quality tables.
+    """
+    Build a simple run id for notebook logs and quality tables.
 
     Args:
         prefix: Run identifier prefix.

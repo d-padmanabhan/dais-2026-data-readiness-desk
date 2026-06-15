@@ -8,18 +8,18 @@ repos:
     hooks:
       - id: compile-python
         name: Compile Python files
-        entry: python -m compileall -q src notebooks tests
+        entry: python -m compileall -q src notebooks tests scripts
         language: system
         pass_filenames: false
         types: [python]
       - id: end-of-file-fixer
         name: Check files end with newline
-        entry: python -c "import pathlib, subprocess, sys; files=subprocess.check_output(['git','ls-files'], text=True).splitlines(); bad=[p for p in files if pathlib.Path(p).is_file() and not pathlib.Path(p).read_bytes().endswith(b'\n')]; print('\n'.join(bad)); sys.exit(bool(bad))"
+        entry: python scripts/check_text_files.py --check final-newline
         language: system
         pass_filenames: false
       - id: trailing-whitespace
         name: Check trailing whitespace
-        entry: python -c "import pathlib, subprocess, sys; files=subprocess.check_output(['git','ls-files'], text=True).splitlines(); bad=[p for p in files if pathlib.Path(p).is_file() and any(line.rstrip(b'\n\r').endswith((b' ', b'\t')) for line in pathlib.Path(p).read_bytes().splitlines(True))]; print('\n'.join(bad)); sys.exit(bool(bad))"
+        entry: python scripts/check_text_files.py --check trailing-whitespace
         language: system
         pass_filenames: false
       - id: black
@@ -44,4 +44,4 @@ repos:
         entry: bandit
         language: system
         args: ["-ll"]
-        files: ^(src|notebooks)/.*\.py$
+        files: ^(src|notebooks|scripts)/.*\.py$

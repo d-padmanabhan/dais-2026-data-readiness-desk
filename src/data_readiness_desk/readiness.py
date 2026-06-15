@@ -1,4 +1,11 @@
-"""Pure Python readiness helpers for local tests and documentation examples."""
+"""
+Build source-readiness summaries without Spark dependencies.
+
+The helpers in this module support local tests and documentation examples for
+the PIN-code readiness logic. Databricks notebooks implement the same concepts
+with Spark dataframes, while these functions make the row-grain behavior easy
+to verify without cluster compute.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +18,8 @@ from data_readiness_desk.normalization import normalize_place_name
 
 @dataclass(frozen=True)
 class PincodeOffice:
-    """Post-office grain record from the PIN code directory.
+    """
+    Post-office grain record from the PIN code directory.
 
     Args:
         pincode: Six-digit postal index number.
@@ -29,7 +37,8 @@ class PincodeOffice:
 # Flat fields mirror the one-row-per-PIN readiness contract.
 @dataclass(frozen=True)
 class PincodeReadiness:  # pylint: disable=too-many-instance-attributes
-    """One-row-per-PIN readiness summary.
+    """
+    One-row-per-PIN readiness summary.
 
     Args:
         pincode: Six-digit postal index number.
@@ -53,7 +62,8 @@ class PincodeReadiness:  # pylint: disable=too-many-instance-attributes
 
 
 def build_pincode_readiness(rows: Iterable[PincodeOffice]) -> list[PincodeReadiness]:
-    """Aggregate post-office rows into join-safe PIN readiness summaries.
+    """
+    Aggregate post-office rows into join-safe PIN readiness summaries.
 
     Args:
         rows: Post-office grain rows.
