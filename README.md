@@ -1,6 +1,6 @@
 # Virtue Foundation Hackathon 2026
 
-This is a Databricks Asset Bundle starter for the DAIS 2026 hackathon. It enriches India healthcare facility analysis with public postal geography and district-level public health indicators.
+This is a Databricks bundle starter for the DAIS 2026 hackathon. It enriches India healthcare facility analysis with public postal geography and district-level public health indicators.
 
 ## Team and Challenge
 
@@ -10,6 +10,8 @@ Team:
 - [Devesh Padmanabhan](https://www.linkedin.com/in/deveshpa/)
 
 Hackathon problem track: Problem 4, Data Readiness Desk: what must be fixed before planning can trust it?
+
+Official event page: [Databricks Apps & Agents for Good Hackathon 2026](https://developers.databricks.com/hackathon/apps-agents-for-good-2026).
 
 Our focus is to make uncertain healthcare geography and public-health indicators reviewable before downstream planning or agentic recommendations depend on them.
 
@@ -26,8 +28,6 @@ Our focus is to make uncertain healthcare geography and public-health indicators
   - [Outputs](#outputs)
   - [Data Quality Position](#data-quality-position)
   - [Agentic Demo Ideas](#agentic-demo-ideas)
-  - [Ignored Files Policy](#ignored-files-policy)
-  - [Convert This Folder to a Git Repo](#convert-this-folder-to-a-git-repo)
 
 ## What This Builds
 
@@ -53,7 +53,7 @@ Both datasets are public-sector datasets published through data.gov.in under the
 
 ## Project Layout
 
-- [databricks.yml](databricks.yml): Databricks Asset Bundle job and variables
+- [databricks.yml](databricks.yml): Databricks bundle job and variables
 - [notebooks/01_ingest_bronze.py](notebooks/01_ingest_bronze.py): CSV ingestion from Unity Catalog Volume
 - [notebooks/02_build_silver.py](notebooks/02_build_silver.py): cleanup, geography normalization, and quality flags
 - [notebooks/03_build_gold.py](notebooks/03_build_gold.py): enrichment-ready gold outputs
@@ -83,9 +83,7 @@ databricks bundle validate --target dev
 
 > [!NOTE]
 > The default variables assume `catalog=hackathon`, `schema=virtue_foundation`, and `source_volume_path=/Volumes/hackathon/virtue_foundation/raw`. Override these with bundle variables if your workspace uses different names.
-
-> [!NOTE]
-> This project intentionally uses [databricks.yml](databricks.yml) because it is the standard Databricks Asset Bundle entrypoint. Other YAML files use the `.yaml` extension.
+> This project intentionally uses [databricks.yml](databricks.yml) because it is the standard Databricks bundle entrypoint. Other YAML files use the `.yaml` extension. Databricks now calls Databricks Asset Bundles Declarative Automation Bundles, but the CLI command remains `databricks bundle`.
 
 ## Run the Pipeline
 
@@ -148,28 +146,3 @@ The final notebook prints an agent prompt that can be used with a Databricks ass
 - Summarize data quality cautions for a selected state.
 
 See [Demo Script](docs/demo_script.md) for a judge-friendly walkthrough.
-
-## Ignored Files Policy
-
-The [.gitignore](.gitignore) is intentionally scoped to keep the repository shareable with event organizers while avoiding generated state, local environments, and raw data artifacts.
-
-- Databricks-generated state is ignored: `.databricks/` and `.bundle/`.
-- Local Python tooling state is ignored: `.venv/`, `__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, `*.py[cod]`, and `*.egg-info/`.
-- Build outputs are ignored: `dist/` and `build/`.
-- Local data zones are ignored: `data/raw/`, `data/bronze/`, `data/silver/`, and `data/gold/`. Source datasets should be stored in Unity Catalog Volumes or documented public sources, not committed.
-- Scratch and machine-local files are ignored: `tmp/`, `*.log`, and `.DS_Store`.
-
-If a future demo needs small sample data, add a curated, license-safe fixture under `tests/fixtures/` instead of committing raw operational data.
-
-## Convert This Folder to a Git Repo
-
-When you are ready to make this standalone:
-
-```bash
-cd /Users/dpadmanabhan/code/labs/data/databricks/dais-2026-data-readiness-desk
-git init
-git add .
-git status
-```
-
-Before the first commit, review [pyproject.toml](pyproject.toml), [databricks.yml](databricks.yml), and [.gitignore](.gitignore) for your final workspace names and team conventions.

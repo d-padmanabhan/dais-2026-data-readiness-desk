@@ -12,7 +12,9 @@ Use this as a short narrative for judges, teammates, or a Databricks booth walkt
 
 ## Opening
 
-We are Vibhu Ganesan and Devesh Padmanabhan. We are solving Problem 4, Data Readiness Desk: what must be fixed before planning can trust it?
+We are [Vibhu Ganesan](https://www.linkedin.com/in/vibhu-g-83313723) and [Devesh Padmanabhan](https://www.linkedin.com/in/deveshpa/). We are solving Problem 4, Data Readiness Desk: what must be fixed before planning can trust it?
+
+This work is for the [Databricks Apps & Agents for Good Hackathon 2026](https://developers.databricks.com/hackathon/apps-agents-for-good-2026).
 
 This project enriches healthcare facility planning in India with two public datasets: India Post postal geography and NFHS-5 district health indicators.
 

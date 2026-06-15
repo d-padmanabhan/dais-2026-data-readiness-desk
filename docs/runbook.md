@@ -7,6 +7,7 @@ This runbook covers the first Databricks execution path.
 - [Prerequisites](#prerequisites)
 - [Validate Configuration](#validate-configuration)
 - [Deploy and Run](#deploy-and-run)
+- [CI Configuration](#ci-configuration)
 - [Manual Notebook Run Order](#manual-notebook-run-order)
 - [Validation Checks](#validation-checks)
 - [Common Issues](#common-issues)
@@ -44,6 +45,16 @@ Use variable overrides when your catalog, schema, or source volume path differs 
 ```bash
 databricks bundle run virtue_foundation_pipeline --target dev --var catalog=my_catalog --var schema=my_schema --var source_volume_path=/Volumes/my_catalog/my_schema/raw
 ```
+
+## CI Configuration
+
+The GitHub Actions workflow validates the Databricks bundle when OAuth service-principal secrets are configured in GitHub:
+
+- `DATABRICKS_HOST`
+- `DATABRICKS_CLIENT_ID`
+- `DATABRICKS_CLIENT_SECRET`
+
+Set repository variable `ENABLE_DATABRICKS_STAGING_DEPLOY=1` only after the staging workspace and catalog are ready. When enabled, pushes to `main` deploy the Declarative Automation Bundle to the `staging` target.
 
 ## Manual Notebook Run Order
 
