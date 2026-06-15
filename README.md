@@ -142,7 +142,7 @@ Bronze tables:
 - `bronze_facilities`
 - `bronze_india_post_pincode_directory`
 - `bronze_nfhs5_district_health_indicators`
-- `bronze_hmis`
+- `bronze_hmis_2019_20_slice`
 - `bronze_srs`
 - `bronze_district_boundaries`
 
@@ -152,6 +152,7 @@ Silver tables:
 - `silver_pincode_lookup`
 - `silver_nfhs_indicator_quality_long`
 - `silver_nfhs5_district_health_indicators`
+- `silver_hmis_2019_20_long`
 - `pipeline_quality_checks`
 
 Gold tables:

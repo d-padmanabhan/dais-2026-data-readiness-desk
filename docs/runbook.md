@@ -242,6 +242,7 @@ Manual notebook order:
 - `pipeline_run_summary` should show a row count for both bronze source tables.
 - `silver_pincode_lookup` should have one row per PIN code.
 - `silver_nfhs_indicator_quality_long` should have one row per district and indicator cell.
+- `silver_hmis_2019_20_long` should show state-grain long-form rows with `geo_grain=state`.
 - `pipeline_quality_checks` should show `pass` for required column and indicator-detection checks.
 - `gold_pincode_health_enrichment` should show match statuses, not just matched rows.
 - `gold_underserved_district_candidates` should produce ranked districts.

@@ -45,6 +45,22 @@ Expected content:
 
 Important implication: indicator names are long and may vary slightly between extracts. The pipeline normalizes column names to snake_case.
 
+### HMIS 2019-20 Slice
+
+Filename: `hmis_2019_20_slice.csv`
+
+Expected source columns:
+
+- `State`
+- `S.No.`
+- `Parameters`
+- `Type`
+- Monthly measure columns such as `April - Total [(A+B) or (C+D)]`
+
+Row grain: state + parameter + reporting type, with one value per month/value-type column.
+
+Important implication: the currently uploaded file is state-grain and encoded as `cp1252`. District-level disease reconciliation requires a district-grain extract or an explicit state-grain fallback.
+
 ## Bronze Tables
 
 ### `bronze_india_post_pincode_directory`
@@ -59,6 +75,15 @@ Metadata columns:
 ### `bronze_nfhs5_district_health_indicators`
 
 Raw NFHS rows plus ingestion metadata.
+
+Metadata columns:
+
+- `_source_file`
+- `_ingested_at_utc`
+
+### `bronze_hmis_2019_20_slice`
+
+Raw HMIS rows plus ingestion metadata.
 
 Metadata columns:
 
@@ -129,6 +154,27 @@ Key columns:
 - `indicator_cell_count`
 - `suppressed_indicator_count`
 - `low_sample_estimate_count`
+
+### `silver_hmis_2019_20_long`
+
+Long-form HMIS state-grain measurements.
+
+Key columns:
+
+- `state_name`
+- `state_normalized`
+- `serial_number`
+- `parameter`
+- `reporting_type`
+- `source_column`
+- `month`
+- `value_type`
+- `raw_value`
+- `value`
+- `is_invalid_numeric`
+- `geo_grain`
+- `source_period`
+- `_recorded_at_utc`
 
 ### `pipeline_quality_checks`
 

@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 sys.path.append(str(Path.cwd() / "src"))
 
+from data_readiness_desk.hmis import parse_hmis_measure_column  # noqa: E402
 from data_readiness_desk.spark_helpers import (  # noqa: E402
     first_existing,
     normalize_column_text,
@@ -85,8 +86,64 @@ def parsed_indicator_long(df: DataFrame, state_col: str, district_col: str) -> D
     )
 
 
+def parsed_hmis_long(df: DataFrame) -> DataFrame:
+    """Convert HMIS wide monthly columns into a long state-grain table.
+
+    Args:
+        df: Raw HMIS bronze dataframe.
+
+    Returns:
+        Long-form HMIS dataframe with parsed numeric values and invalid-value flags.
+
+    Raises:
+        ValueError: If required metadata columns or measure columns are missing.
+    """
+    require_columns(df, {"State", "S.No.", "Parameters", "Type"}, "HMIS 2019-20 slice")
+    measure_columns = [
+        measure_column
+        for column_name in df.columns
+        if (measure_column := parse_hmis_measure_column(column_name)) is not None
+    ]
+    if not measure_columns:
+        raise ValueError("HMIS 2019-20 slice has no parseable month/value measure columns")
+
+    value_structs = [
+        F.struct(
+            F.lit(measure_column.source_column).alias("source_column"),
+            F.lit(measure_column.month).alias("month"),
+            F.lit(measure_column.value_type).alias("value_type"),
+            F.col(measure_column.source_column).cast("string").alias("raw_value"),
+        )
+        for measure_column in measure_columns
+    ]
+    exploded = df.withColumn("measure", F.explode(F.array(*value_structs)))
+    cleaned_raw = F.trim(F.regexp_replace(F.col("measure.raw_value"), "\u00a0", " "))
+    numeric_text = F.regexp_replace(cleaned_raw, ",", "")
+    is_unavailable = F.upper(cleaned_raw).isin("", "NA", "N/A", "NULL", "-")
+    is_integer = numeric_text.rlike(r"^-?\d+$")
+    return exploded.select(
+        F.col("State").alias("state_name"),
+        normalize_column_text("State").alias("state_normalized"),
+        F.regexp_replace(F.trim(F.col("S.No.").cast("string")), "'", "").alias("serial_number"),
+        F.regexp_replace(F.trim(F.col("Parameters").cast("string")), "\u00a0", " ").alias("parameter"),
+        F.trim(F.col("Type").cast("string")).alias("reporting_type"),
+        F.col("measure.source_column").alias("source_column"),
+        F.col("measure.month").alias("month"),
+        F.col("measure.value_type").alias("value_type"),
+        F.col("measure.raw_value").alias("raw_value"),
+        F.when(is_unavailable, F.lit(None).cast("long"))
+        .when(is_integer, numeric_text.cast("long"))
+        .otherwise(F.lit(None).cast("long"))
+        .alias("value"),
+        (~is_unavailable & ~is_integer).alias("is_invalid_numeric"),
+        F.lit("state").alias("geo_grain"),
+        F.lit("2019-20").alias("source_period"),
+    ).withColumn("_recorded_at_utc", F.current_timestamp())
+
+
 pincode_bronze = spark.table(table_name(catalog, schema, "bronze_india_post_pincode_directory"))
 nfhs_bronze = spark.table(table_name(catalog, schema, "bronze_nfhs5_district_health_indicators"))
+hmis_bronze = spark.table(table_name(catalog, schema, "bronze_hmis_2019_20_slice"))
 
 pincode = rename_columns(pincode_bronze)
 require_columns(
@@ -160,6 +217,7 @@ nfhs_silver = nfhs_wide.join(
     on=["state_normalized", "district_normalized"],
     how="left",
 )
+hmis_long = parsed_hmis_long(hmis_bronze)
 
 quality_checks = spark.createDataFrame(
     [
@@ -167,6 +225,8 @@ quality_checks = spark.createDataFrame(
         ("pincode_lookup_is_unique", "pass", pin_lookup.select("pincode").distinct().count()),
         ("nfhs_geography_columns_detected", "pass", 2),
         ("nfhs_indicator_columns_detected", "pass", nfhs_quality_long.select("indicator_name").distinct().count()),
+        ("hmis_state_grain_detected", "pass", hmis_long.select("state_normalized").distinct().count()),
+        ("hmis_invalid_numeric_count", "warn", hmis_long.filter(F.col("is_invalid_numeric")).count()),
     ],
     ["check_name", "status", "observed_value"],
 ).withColumn("_recorded_at_utc", F.current_timestamp())
@@ -175,6 +235,7 @@ write_delta(pincode, catalog, schema, "silver_pincode_post_offices")
 write_delta(pin_lookup, catalog, schema, "silver_pincode_lookup")
 write_delta(nfhs_quality_long, catalog, schema, "silver_nfhs_indicator_quality_long")
 write_delta(nfhs_silver, catalog, schema, "silver_nfhs5_district_health_indicators")
+write_delta(hmis_long, catalog, schema, "silver_hmis_2019_20_long")
 write_delta(quality_checks, catalog, schema, "pipeline_quality_checks")
 
 display(
@@ -184,6 +245,7 @@ display(
             ("silver_pincode_lookup", pin_lookup.count()),
             ("silver_nfhs_indicator_quality_long", nfhs_quality_long.count()),
             ("silver_nfhs5_district_health_indicators", nfhs_silver.count()),
+            ("silver_hmis_2019_20_long", hmis_long.count()),
         ],
         ["table_name", "row_count"],
     )

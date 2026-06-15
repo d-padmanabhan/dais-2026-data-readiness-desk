@@ -17,6 +17,9 @@ variables:
   nfhs_file:
     description: NFHS-5 district health indicators CSV filename.
     default: nfhs5_district_health_indicators.csv
+  hmis_file:
+    description: HMIS 2019-20 state-grain slice CSV filename.
+    default: hmis_2019_20_slice.csv
 
 resources:
   jobs:
@@ -39,6 +42,7 @@ resources:
               source_volume_path: ${var.source_volume_path}
               pincode_file: ${var.pincode_file}
               nfhs_file: ${var.nfhs_file}
+              hmis_file: ${var.hmis_file}
         - task_key: build_silver
           depends_on:
             - task_key: ingest_bronze

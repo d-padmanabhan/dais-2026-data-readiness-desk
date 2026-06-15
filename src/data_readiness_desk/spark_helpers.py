@@ -31,13 +31,14 @@ def table_name(catalog: str, schema: str, table: str) -> str:
     return f"`{catalog}`.`{schema}`.`{table}`"
 
 
-def read_csv(spark: SparkSession, path: str) -> DataFrame:
+def read_csv(spark: SparkSession, path: str, encoding: str = "UTF-8") -> DataFrame:
     """
     Read a source CSV with options suitable for public-sector extracts.
 
     Args:
         spark: Active Spark session.
         path: CSV path in a Unity Catalog Volume.
+        encoding: Java charset name used to decode the source file.
 
     Returns:
         Source dataframe with all columns read as strings.
@@ -45,6 +46,7 @@ def read_csv(spark: SparkSession, path: str) -> DataFrame:
     return (
         spark.read.option("header", True)
         .option("inferSchema", False)
+        .option("encoding", encoding)
         .option("multiLine", True)
         .option("escape", '"')
         .csv(path)
