@@ -129,6 +129,30 @@ databricks fs cp data/india_districts.geojson dbfs:/Volumes/data_readiness_desk/
 
 NFHS-5 may already exist as a provided Databricks table. Record its full table name before joining.
 
+## Phase 1A - Grant Read Access
+
+Grant least-privilege read access to a teammate or your own user after the catalog exists:
+
+```bash
+./scripts/grant_catalog_read_access.sh \
+  --principal devesh_padmanabhan@mckinsey.com \
+  --warehouse-id 4e307d33a4466b55 \
+  --catalog data_readiness_desk \
+  --schema pipeline \
+  --volume-schema bronze \
+  --volume files
+```
+
+The script grants:
+
+```sql
+GRANT USE CATALOG ON CATALOG data_readiness_desk TO `<principal>`;
+GRANT USE SCHEMA ON SCHEMA data_readiness_desk.pipeline TO `<principal>`;
+GRANT SELECT ON SCHEMA data_readiness_desk.pipeline TO `<principal>`;
+GRANT USE SCHEMA ON SCHEMA data_readiness_desk.bronze TO `<principal>`;
+GRANT READ VOLUME ON VOLUME data_readiness_desk.bronze.files TO `<principal>`;
+```
+
 ## Phase 2 - Bronze Ingest
 
 Goal: land every source as raw Delta once. Do not reread raw files in later phases.

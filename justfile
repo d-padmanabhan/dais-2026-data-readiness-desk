@@ -35,6 +35,10 @@ validate-bundle target="dev":
 bootstrap-databricks warehouse_id:
     ./scripts/bootstrap_databricks_workspace.sh --warehouse-id {{warehouse_id}}
 
+# Grant read access to the project catalog and source Volume
+grant-catalog-read principal warehouse_id:
+    ./scripts/grant_catalog_read_access.sh --principal {{principal}} --warehouse-id {{warehouse_id}}
+
 # Query key cached readiness outputs
 query-readiness warehouse_id:
     ./scripts/query_readiness_outputs.sh --warehouse-id {{warehouse_id}}
