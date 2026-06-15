@@ -1,9 +1,7 @@
 # Databricks notebook source
 """Demo queries for hackathon storytelling and agentic exploration."""
 
-import sys
 from collections.abc import Callable
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pyspark.sql import SparkSession
@@ -14,15 +12,16 @@ if TYPE_CHECKING:
     display: Callable[[object], None]
     spark: SparkSession
 
-sys.path.append(str(Path.cwd() / "src"))
-
-from data_readiness_desk.spark_helpers import table_name  # noqa: E402
-
 dbutils.widgets.text("catalog", "data_readiness_desk")
 dbutils.widgets.text("schema", "pipeline")
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
+
+
+def table_name(catalog_name: str, schema_name: str, table: str) -> str:
+    """Return a quoted Unity Catalog table name."""
+    return f"`{catalog_name}`.`{schema_name}`.`{table}`"
 
 
 underserved = spark.table(table_name(catalog, schema, "gold_underserved_district_candidates"))

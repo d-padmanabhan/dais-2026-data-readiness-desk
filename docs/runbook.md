@@ -13,10 +13,11 @@ This runbook is the single source of truth for setting up, building, validating,
 - [Phase 3 - Silver Clean Normalize Resolve Geography](#phase-3---silver-clean-normalize-resolve-geography)
 - [Phase 4 - AutoML Classifier](#phase-4---automl-classifier)
 - [Phase 5 - Gold Score Everything](#phase-5---gold-score-everything)
-- [Phase 6 - Streamlit App](#phase-6---streamlit-app)
+- [Phase 6 - Free Databricks App](#phase-6---free-databricks-app)
 - [Phase 7 - Deploy And Dry Run](#phase-7---deploy-and-dry-run)
 - [CI Configuration](#ci-configuration)
 - [Validation Checks](#validation-checks)
+- [Export Workspace Reference Artifacts](#export-workspace-reference-artifacts)
 - [Common Issues](#common-issues)
 - [Quota-Safety Checklist](#quota-safety-checklist)
 
@@ -31,19 +32,26 @@ This runbook is the single source of truth for setting up, building, validating,
 
 Source files are tracked or staged under [data](../data/) before they are copied into a Unity Catalog Volume. Expected filenames:
 
-- `facilities.xlsx`
 - `india_post_pincode_directory.csv`
 - `hmis_2019_20_slice.csv`
 - `srs_2020_state.csv`
 - `india_districts.geojson`
 
-Copy these files to `/Volumes/data_readiness_desk/bronze/files/` or the configured source volume before running the bronze notebook. NFHS-5 may be referenced as a provided Databricks table instead of a local file.
+Copy file-based sources to `/Volumes/data_readiness_desk/bronze/files/` or the configured source volume before running the bronze notebook. Facilities and NFHS-5 are referenced as Databricks shared tables.
 
 Current HMIS caveat: `hmis_2019_20_slice.csv` is present locally, but the inspected file is state-grain (`State`, `S.No.`, `Parameters`, `Type`, monthly value columns) and uses `cp1252` encoding. District-level disease reconciliation still needs either a district-grain HMIS extract or an explicit state-grain fallback story.
 
+Build or fetch reproducible local source files:
+
+```bash
+just generate-srs
+just fetch-boundaries
+DATA_GOV_API_KEY="<your-data-gov-api-key>" just fetch-pincode
+```
+
 ## Governance Notes
 
-Review [Databricks Governance](governance.md) before creating non-dev catalogs, grants, or app identities. The hackathon defaults are intentionally lightweight, but production-style ownership should use groups or service principals, Unity Catalog Volumes or external locations, governed tags, and read-only app access to cached gold outputs.
+Review [Databricks Governance](governance.md), especially the [Databricks object hierarchy](governance.md#databricks-object-hierarchy), before creating non-dev catalogs, grants, or app identities. The hackathon defaults are intentionally lightweight, but production-style ownership should use groups or service principals, Unity Catalog Volumes or external locations, governed tags, and read-only app access to cached gold outputs.
 
 ## Phase 0 - Local Setup
 
@@ -70,7 +78,19 @@ databricks bundle validate --target dev
 
 ## Phase 1 - Provision Unity Catalog
 
-Create the demo catalog, schemas, and upload Volume:
+Use the bootstrap script to create the catalog, schemas, upload Volume, and upload any available local files:
+
+```bash
+./scripts/bootstrap_databricks_workspace.sh --warehouse-id <warehouse-id>
+```
+
+For the current workspace, the known starter warehouse is:
+
+```bash
+./scripts/bootstrap_databricks_workspace.sh --warehouse-id 4e307d33a4466b55
+```
+
+The script runs the following SQL:
 
 ```sql
 CREATE CATALOG IF NOT EXISTS data_readiness_desk;
@@ -80,10 +100,9 @@ CREATE SCHEMA IF NOT EXISTS data_readiness_desk.gold;
 CREATE VOLUME IF NOT EXISTS data_readiness_desk.bronze.files;
 ```
 
-Upload local files from [data](../data/) to the Volume:
+It then uploads local files from [data](../data/) to the Volume:
 
 ```bash
-databricks fs cp data/Facilities.xlsx dbfs:/Volumes/data_readiness_desk/bronze/files/
 databricks fs cp data/india_post_pincode_directory.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
 databricks fs cp data/hmis_2019_20_slice.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
 databricks fs cp data/srs_2020_state.csv dbfs:/Volumes/data_readiness_desk/bronze/files/
@@ -98,7 +117,7 @@ Goal: land every source as raw Delta once. Do not reread raw files in later phas
 
 Expected bronze tables:
 
-- `data_readiness_desk.bronze.facilities`
+- `data_readiness_desk.bronze.facilities` sourced from the shared facilities table
 - `data_readiness_desk.bronze.pincode`
 - `data_readiness_desk.bronze.hmis`
 - `data_readiness_desk.bronze.srs`
@@ -112,7 +131,7 @@ Silver is where grain discipline and denominator discipline live.
 
 Build or extend these outputs:
 
-- `data_readiness_desk.silver.facilities_geo`: facility points assigned to district polygons where valid coordinates exist.
+- `data_readiness_desk.silver.facilities_geo`: facility points with validated coordinates and source geography fields.
 - `data_readiness_desk.silver.pincode_lookup`: one row per PIN with ambiguity flags.
 - `data_readiness_desk.silver.nfhs_indicator_quality_long`: NFHS values with suppressed/low-sample flags.
 - `data_readiness_desk.silver.hmis_long`: HMIS wide monthly values normalized to long form with `geo_grain`.
@@ -162,9 +181,9 @@ Rules:
 - `ai_extract` values from facility `capability` text get partial provenance confidence.
 - Before/after demo rows must be precomputed so the app only swaps cached rows.
 
-## Phase 6 - Streamlit App
+## Phase 6 - Free Databricks App
 
-The app lives under [app](../app/) and must read cached gold tables only.
+The app lives under [app](../app/) and must run as a Free Databricks App. The current scaffold uses Vite, React, and Node.js inside Databricks Apps; do not deploy this as an external web service. The app must read cached gold tables only.
 
 UI requirements:
 
@@ -232,6 +251,40 @@ databricks bundle deploy --target dev
 databricks bundle run virtue_foundation_pipeline --target dev
 ```
 
+Query cached readiness outputs:
+
+```bash
+./scripts/query_readiness_outputs.sh --warehouse-id <warehouse-id>
+```
+
+## Export Workspace Reference Artifacts
+
+Some design artifacts can be created in the Databricks workspace during the hackathon. Export them into the repo only as reference material unless they have been reviewed and promoted into the canonical bundle notebooks or app code.
+
+Use these commands to export the current Genie-generated artifacts:
+
+```bash
+databricks workspace export \
+  "/Workspace/Users/devesh_padmanabhan@mckinsey.com/Data Readiness Desk - Pipeline Transforms" \
+  --format SOURCE \
+  --file "notebooks/genie_pipeline_transforms.py"
+
+databricks workspace export \
+  "/Workspace/Users/devesh_padmanabhan@mckinsey.com/Data Readiness Desk - App Integration" \
+  --format SOURCE \
+  --file "notebooks/genie_app_integration.py"
+
+databricks workspace export \
+  "/Workspace/Users/devesh_padmanabhan@mckinsey.com/HACKATHON_SETUP_README.md" \
+  --format SOURCE \
+  --file "docs/genie/hackathon_setup.md"
+```
+
+> [!NOTE]
+> Treat exported workspace artifacts as reference snapshots. The canonical implementation lives in [databricks.yml](../databricks.yml), [notebooks](../notebooks/), [app](../app/), and [src/data_readiness_desk](../src/data_readiness_desk/).
+
+Use `data-readiness-desk@acme.com` as the placeholder contact address in documentation examples. Do not use a personal address unless we explicitly decide to publish one.
+
 Manual notebook order:
 
 1. [00_preflight.py](../notebooks/00_preflight.py)
@@ -250,7 +303,7 @@ Manual notebook order:
 - `pipeline_quality_checks` should show `pass` for required column and indicator-detection checks.
 - `gold_pincode_health_enrichment` should show match statuses, not just matched rows.
 - `gold_underserved_district_candidates` should produce ranked districts.
-- App tables such as `gold_facility_verdicts`, `gold_district_verdicts`, and `gold_fix_ranking` should be precomputed before the Streamlit app demo.
+- App tables such as `gold_facility_verdicts`, `gold_district_verdicts`, and `gold_fix_ranking` should be precomputed before the Free Databricks App demo.
 
 ## Common Issues
 

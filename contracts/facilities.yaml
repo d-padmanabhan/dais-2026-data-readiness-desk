@@ -1,21 +1,21 @@
 ---
 dataset: virtue_foundation_facilities
 owner: data-readiness-desk-team
-source: Virtue Foundation hackathon facility slice
+source: Databricks Marketplace Virtue Foundation facilities table
 grain: facility_point
 classification: event_dataset
-expected_file: data/Facilities.xlsx
+expected_table: databricks_virtue_foundation_dataset_dais_2026.virtue_foundation_dataset.facilities
 known_slice_facts:
-  row_count: 100
+  row_count: 10088
   country: India
   cluster_id_unique: true
 required_columns:
-  - cluster_id
+  - name
   - latitude
   - longitude
-  - address
-  - zip
-  - name
+  - address_stateOrRegion
+  - address_zipOrPostcode
+  - cluster_id
 high_value_sparse_columns:
   - numberDoctors
   - capacity

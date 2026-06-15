@@ -20,6 +20,15 @@ variables:
   hmis_file:
     description: HMIS 2019-20 state-grain slice CSV filename.
     default: hmis_2019_20_slice.csv
+  srs_file:
+    description: SRS 2020 state CSV filename.
+    default: srs_2020_state.csv
+  district_boundaries_file:
+    description: India district boundaries GeoJSON filename.
+    default: india_districts.geojson
+  facilities_table:
+    description: Shared Databricks table containing Virtue Foundation facilities.
+    default: databricks_virtue_foundation_dataset_dais_2026.virtue_foundation_dataset.facilities
 
 resources:
   jobs:
@@ -40,6 +49,9 @@ resources:
               pincode_file: ${var.pincode_file}
               nfhs_file: ${var.nfhs_file}
               hmis_file: ${var.hmis_file}
+              srs_file: ${var.srs_file}
+              district_boundaries_file: ${var.district_boundaries_file}
+              facilities_table: ${var.facilities_table}
         - task_key: ingest_bronze
           depends_on:
             - task_key: preflight
@@ -52,6 +64,7 @@ resources:
               pincode_file: ${var.pincode_file}
               nfhs_file: ${var.nfhs_file}
               hmis_file: ${var.hmis_file}
+              facilities_table: ${var.facilities_table}
         - task_key: build_silver
           depends_on:
             - task_key: ingest_bronze

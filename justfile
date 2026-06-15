@@ -31,6 +31,26 @@ test:
 validate-bundle target="dev":
     databricks bundle validate --target {{target}}
 
+# Bootstrap Unity Catalog objects and upload available source files
+bootstrap-databricks warehouse_id:
+    ./scripts/bootstrap_databricks_workspace.sh --warehouse-id {{warehouse_id}}
+
+# Query key cached readiness outputs
+query-readiness warehouse_id:
+    ./scripts/query_readiness_outputs.sh --warehouse-id {{warehouse_id}}
+
+# Generate SRS state CSV from the SRS bulletin PDF
+generate-srs:
+    uv run python scripts/generate_srs_2020_state_csv.py
+
+# Fetch India district boundary GeoJSON
+fetch-boundaries:
+    ./scripts/fetch_district_boundaries.sh
+
+# Fetch India PIN directory using the official OGD API
+fetch-pincode:
+    ./scripts/fetch_pincode_directory.sh
+
 # Run workflow linting
 lint-workflows:
     actionlint .github/workflows/*.yaml

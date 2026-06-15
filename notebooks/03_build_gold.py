@@ -1,9 +1,7 @@
 # Databricks notebook source
 """Build gold tables for enrichment and demo-friendly district analysis."""
 
-import sys
 from collections.abc import Callable
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pyspark.sql import Column, DataFrame, SparkSession
@@ -14,15 +12,33 @@ if TYPE_CHECKING:
     display: Callable[[object], None]
     spark: SparkSession
 
-sys.path.append(str(Path.cwd() / "src"))
-
-from data_readiness_desk.spark_helpers import require_columns, table_name, write_delta  # noqa: E402
-
 dbutils.widgets.text("catalog", "data_readiness_desk")
 dbutils.widgets.text("schema", "pipeline")
 
 catalog = dbutils.widgets.get("catalog")
 schema = dbutils.widgets.get("schema")
+
+
+def table_name(catalog_name: str, schema_name: str, table: str) -> str:
+    """Return a quoted Unity Catalog table name."""
+    return f"`{catalog_name}`.`{schema_name}`.`{table}`"
+
+
+def require_columns(df: DataFrame, required_columns: set[str], dataset_name: str) -> None:
+    """Fail fast when required columns are missing."""
+    missing = sorted(required_columns.difference(df.columns))
+    if missing:
+        raise ValueError(f"{dataset_name} is missing required columns: {missing}")
+
+
+def write_delta(df: DataFrame, catalog_name: str, schema_name: str, table: str) -> None:
+    """Overwrite a managed Delta table."""
+    (
+        df.write.mode("overwrite")
+        .option("overwriteSchema", "true")
+        .format("delta")
+        .saveAsTable(table_name(catalog_name, schema_name, table))
+    )
 
 
 def find_metric(columns: list[str], include_terms: list[str], exclude_terms: list[str] | None = None) -> str | None:
@@ -63,6 +79,20 @@ pincode_lookup = spark.table(table_name(catalog, schema, "silver_pincode_lookup"
 pincode_offices = spark.table(table_name(catalog, schema, "silver_pincode_post_offices"))
 nfhs = spark.table(table_name(catalog, schema, "silver_nfhs5_district_health_indicators"))
 hmis_indicator_totals = spark.table(table_name(catalog, schema, "silver_hmis_2019_20_indicator_totals"))
+facilities_geo = spark.table(table_name(catalog, schema, "silver_facilities_geo"))
+
+require_columns(
+    facilities_geo,
+    {
+        "source_state_name",
+        "source_state_normalized",
+        "has_valid_coordinates",
+        "has_pincode",
+        "has_capability_text",
+        "care_substance_missing_count",
+    },
+    "silver_facilities_geo",
+)
 
 require_columns(
     pincode_lookup,
@@ -200,9 +230,61 @@ hmis_state_indicator_summary = (
     .withColumn("data_caution", F.lit("state_grain_hmis_fallback_not_district_reconciliation"))
 )
 
+facility_verdicts = (
+    facilities_geo.groupBy("source_state_name", "source_state_normalized")
+    .agg(
+        F.count("*").alias("total_facilities"),
+        F.sum(F.col("has_valid_coordinates").cast("int")).alias("valid_coordinate_facilities"),
+        F.sum(F.col("has_pincode").cast("int")).alias("pincode_present_facilities"),
+        F.sum(F.col("has_capability_text").cast("int")).alias("capability_text_facilities"),
+        F.avg(F.col("care_substance_missing_count").cast("double")).alias("avg_care_substance_missing_count"),
+    )
+    .withColumn(
+        "location_trust_score",
+        F.when(F.col("total_facilities") > 0, F.col("valid_coordinate_facilities") / F.col("total_facilities")),
+    )
+    .withColumn(
+        "data_completeness_score",
+        F.when(
+            F.col("total_facilities") > 0,
+            (
+                F.col("pincode_present_facilities") / F.col("total_facilities")
+                + F.col("capability_text_facilities") / F.col("total_facilities")
+                + (4.0 - F.col("avg_care_substance_missing_count")) / 4.0
+            )
+            / 3.0,
+        ),
+    )
+    .withColumn(
+        "numeric_score",
+        (
+            F.coalesce(F.col("location_trust_score"), F.lit(0.0))
+            + F.coalesce(F.col("data_completeness_score"), F.lit(0.0))
+        )
+        / 2.0,
+    )
+    .withColumn(
+        "band",
+        F.when(F.col("numeric_score") >= 0.85, F.lit("green"))
+        .when(F.col("numeric_score") >= 0.60, F.lit("amber"))
+        .otherwise(F.lit("red")),
+    )
+    .withColumn(
+        "binding_reason",
+        F.when(
+            F.coalesce(F.col("location_trust_score"), F.lit(0.0))
+            <= F.coalesce(F.col("data_completeness_score"), F.lit(0.0)),
+            F.lit("Location: invalid or out-of-country coordinates constrain trust"),
+        ).otherwise(F.lit("Completeness: sparse care-substance fields constrain trust")),
+    )
+    .withColumn("geo_grain", F.lit("state"))
+    .withColumn("data_caution", F.lit("state_rollup_before_district_polygon_assignment"))
+)
+
 write_delta(district_health_context, catalog, schema, "gold_district_health_context")
 write_delta(pincode_enrichment, catalog, schema, "gold_pincode_health_enrichment")
 write_delta(underserved_candidates, catalog, schema, "gold_underserved_district_candidates")
 write_delta(hmis_state_indicator_summary, catalog, schema, "gold_hmis_state_indicator_summary")
+write_delta(facility_verdicts, catalog, schema, "gold_facility_verdicts")
 
 display(underserved_candidates.orderBy(F.desc("demand_side_need_score")).limit(25))

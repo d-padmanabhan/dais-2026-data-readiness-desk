@@ -97,4 +97,4 @@ Gold creates outputs for the hackathon story:
 - Add HMIS/SRS ingestion and denominator-normalized disease corroboration.
 - Add AutoML or static fallback predictions into `gold_coverage_predictions`.
 - Implement `ai_extract` for facility capability provenance confidence.
-- Wire the Streamlit app to cached `gold_*_verdicts` and `gold_fix_ranking`.
+- Wire the Free Databricks App to cached `gold_*_verdicts` and `gold_fix_ranking`.

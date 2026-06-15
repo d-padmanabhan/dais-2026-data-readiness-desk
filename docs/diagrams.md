@@ -30,7 +30,7 @@ flowchart LR
     ModelNotebook["03 Train Or Static Predictions"]
     GoldNotebook["03 Build Gold"]
     DemoNotebook["04 Demo Queries"]
-    App["Databricks App Streamlit"]
+    App["Free Databricks App<br/>React, Vite, Node.js"]
   end
 
   subgraph tables [Unity Catalog Delta Tables]

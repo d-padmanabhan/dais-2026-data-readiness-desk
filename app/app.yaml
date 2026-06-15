@@ -1,6 +1,4 @@
-command: ["streamlit", "run", "app.py"]
+command: ["npm", "run", "start"]
 env:
-  - name: "STREAMLIT_GATHER_USAGE_STATS"
-    value: "false"
   - name: "DATABRICKS_WAREHOUSE_ID"
-    value: "<warehouse-id>"
+    value: "4e307d33a4466b55"

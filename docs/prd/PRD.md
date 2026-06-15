@@ -21,15 +21,16 @@ Implemented:
 - Gold state-grain HMIS fallback summary.
 - Data contracts for expected source files.
 - Pure Python helpers for normalization, readiness, HMIS parsing, and Trust Verdict scoring.
-- Streamlit Databricks App scaffold that is read-only by design.
+- Free Databricks App scaffold that uses Vite, React, and Node.js inside Databricks Apps and is read-only by design.
 - Governance, decision log, diagrams, data dictionary, and consolidated runbook.
 - GitHub Actions, pre-commit, secret scanning, and local quality tooling.
 
 Current source availability:
 
-- Present locally: `data/hmis_2019_20_slice.csv`
-- Not currently present locally: `Facilities.xlsx`, `india_post_pincode_directory.csv`, `srs_2020_state.csv`, `india_districts.geojson`
-- NFHS-5 may be a Databricks table rather than a local file.
+- Present locally: `data/hmis_2019_20_slice.csv`, `data/srs_2020_state.csv`, `data/india_districts.geojson`
+- Available as Databricks shared table: facilities
+- Not currently present locally: `india_post_pincode_directory.csv`
+- NFHS-5 is expected as a Databricks shared table.
 
 ## Non-Goals
 
@@ -41,6 +42,7 @@ Current source availability:
 ## Constraints
 
 - Databricks Free Edition quota: precompute all expensive results.
+- The UI must run as a Free Databricks App; no external web hosting.
 - App reads cached gold outputs only.
 - Genie calls must be user-initiated and cached if used.
 - Automation uses service-principal OAuth, not personal access tokens.
@@ -58,7 +60,7 @@ Current source availability:
 
 - Location lens scores all facility records from cached data.
 - Disease lens demonstrates at least one NFHS/HMIS trust verdict or documented state-grain fallback.
-- Streamlit app shows verdict card, reason, ranked fixes, and cached before/after behavior.
+- Free Databricks App shows verdict card, reason, ranked fixes, and cached before/after behavior.
 - `ai_extract` output exists or is explicitly scaffolded as the fallback.
 - AutoML predictions exist or a static fallback table is documented.
 - Live demo runs without raw ingest, writes, model training, or recomputation.

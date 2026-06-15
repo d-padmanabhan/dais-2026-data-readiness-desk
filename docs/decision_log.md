@@ -28,7 +28,7 @@ Decision: compute Trust Verdicts, fixes, model predictions, and before/after sta
 Why it adds value:
 
 - Protects Databricks Free Edition quota.
-- Keeps the Streamlit app fast and reliable.
+- Keeps the Free Databricks App fast and reliable.
 - Ensures the demo can explain exactly which precomputed evidence supports each verdict.
 
 ## Treat PIN Geography As A Readiness Signal

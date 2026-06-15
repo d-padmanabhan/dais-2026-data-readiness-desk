@@ -1,14 +1,19 @@
 ---
 dataset: india_district_boundaries
 owner: data-readiness-desk-team
-source: geoBoundaries or DataMeet India Maps
+source: geohacker/india district GeoJSON
 grain: district_polygon
 classification: public
 expected_file: data/india_districts.geojson
+fetched_by: scripts/fetch_district_boundaries.sh
+source_url: https://raw.githubusercontent.com/geohacker/india/master/district/india_district.geojson
 required_fields:
-  - district
-  - state
+  - NAME_1
+  - NAME_2
   - geometry
+field_mapping:
+  state: NAME_1
+  district: NAME_2
 quality_rules:
   - name: geometry_valid
     severity: fail

@@ -5,6 +5,7 @@ This project is a hackathon build, but the governance posture should still be ex
 ## Table of Contents
 
 - [Governance Model](#governance-model)
+- [Databricks Object Hierarchy](#databricks-object-hierarchy)
 - [Catalog And Schema Pattern](#catalog-and-schema-pattern)
 - [Ownership And Grants](#ownership-and-grants)
 - [Tags And Classification](#tags-and-classification)
@@ -24,6 +25,33 @@ Recommended default:
 - Avoid workspace-local groups as governance primitives.
 - Own production objects with groups or service principals, not individual users.
 - Keep service-principal permissions scoped to the workload.
+
+## Databricks Object Hierarchy
+
+The main Databricks control and data objects are:
+
+- Account: top-level billing and admin boundary. An account contains one or more workspaces and is managed by account admins.
+- Workspace: isolated Databricks environment where users collaborate. A workspace contains notebooks, queries, dashboards, jobs, and related workspace assets.
+- Metastore: Unity Catalog metadata and governance layer that can be shared across workspaces. A metastore contains catalogs and governs data access.
+- Catalog: top-level container for schemas. In `databricks_virtue_foundation_dataset_dais_2026.virtue_foundation_dataset.facilities`, `databricks_virtue_foundation_dataset_dais_2026` is the catalog.
+- Schema: container for tables, views, functions, and volumes. In the same example, `virtue_foundation_dataset` is the schema.
+- Table, view, volume, or function: actual data object. In the same example, `facilities` is the table.
+- Columns: fields inside a table, such as `name`, `latitude`, or `longitude`.
+- Rows: actual data records.
+
+Fully qualified table names follow this pattern:
+
+```text
+catalog.schema.table
+```
+
+Example:
+
+```text
+databricks_virtue_foundation_dataset_dais_2026.virtue_foundation_dataset.facilities
+```
+
+Compute resources, such as the Serverless SQL Warehouse, sit alongside this data hierarchy. They execute queries against governed objects, but they are not part of the storage hierarchy.
 
 ## Catalog And Schema Pattern
 
@@ -128,7 +156,7 @@ These are acceptable for the hackathon but should be revisited before production
 
 - Small local `data/` landing folder before upload to a Unity Catalog Volume.
 - Demo catalog naming such as `data_readiness_desk`.
-- Streamlit app scaffold with placeholder cached-read behavior.
+- Free Databricks App scaffold with placeholder cached-read behavior.
 - Static fallback predictions if AutoML cannot be completed in time.
 - Limited source slices for HMIS and facilities.
 

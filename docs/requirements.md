@@ -37,7 +37,7 @@ The app answers *"can I act on this number,"* not *"is this district healthy."* 
   - **Pre-compute and cache** all scores into a Delta/Lakebase table. The app reads cached results; it does **not** recompute on user interaction.
   - No live model training during the demo - train once, register, load.
 - **Genie limits:** ~5 questions/min (API), ~80-100/month free. Genie calls must be **user-initiated and cached**; never call Genie on keystroke or page-load loops.
-- **UI:** Databricks Apps, **Streamlit** (simplest for a verdict-card + map UI).
+- **UI HARD REQUIREMENT:** The user interface must run as a **Free Databricks App**. The current scaffold uses Vite, React, and Node.js inside Databricks Apps, not an external web host.
 - **Commercial use prohibited** on Free Edition - this is a demo/learning build only.
 
 
@@ -191,7 +191,7 @@ Divergence ≠ error (structural denominator differences). Tolerance widens with
 | Orchestration / fix engine | **Agent** (diagnose -> recommend -> re-score) |
 | NL interface | **Genie** ("Can I trust the data for ___?") |
 | Marketplace | published PIN + NFHS-5 (+ added HMIS/SRS) |
-| UI | **Databricks Apps (Streamlit)** - verdict card + map + why-panel |
+| UI | **Free Databricks App using React/Vite/Node.js** - verdict card + map + why-panel |
 
 
 ## UI Requirements

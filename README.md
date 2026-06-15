@@ -54,7 +54,7 @@ Both datasets are public-sector datasets published through data.gov.in under the
 
 ## Project Layout
 
-- [app](app): Streamlit Databricks App scaffold for cached Trust Verdict reads
+- [app](app): Free Databricks App scaffold for cached Trust Verdict reads
 - [config/scoring.yaml](config/scoring.yaml): tunable Trust Verdict thresholds and quota-safety defaults
 - [data](data): landing folder and upload guide for Vibhu's source files
 - [databricks.yml](databricks.yml): Databricks bundle job and variables
@@ -85,7 +85,7 @@ Key engineering references:
 - [Architecture](docs/architecture.md)
 - [Diagrams](docs/diagrams.md)
 - [Decision Log](docs/decision_log.md)
-- [Governance](docs/governance.md)
+- [Governance](docs/governance.md), including the [Databricks object hierarchy](docs/governance.md#databricks-object-hierarchy)
 - [Implementation Status](docs/implementation_status.md)
 - [Data Quality Decisions](docs/data_quality.md)
 - [Data Dictionary](docs/data_dictionary.md)
@@ -154,6 +154,7 @@ Silver tables:
 - `silver_nfhs_indicator_quality_long`
 - `silver_nfhs5_district_health_indicators`
 - `silver_hmis_2019_20_long`
+- `silver_facilities_geo`
 - `pipeline_quality_checks`
 
 Gold tables:

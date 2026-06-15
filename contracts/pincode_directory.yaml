@@ -4,6 +4,15 @@ owner: data-readiness-desk-team
 source: data.gov.in India Post PIN Code Directory
 grain: post_office
 classification: public
+default_scope:
+  states:
+    - Tamil Nadu
+    - Kerala
+    - Telangana
+    - Andhra Pradesh
+    - Karnataka
+    - Goa
+    - Maharashtra
 required_columns:
   - circlename
   - regionname

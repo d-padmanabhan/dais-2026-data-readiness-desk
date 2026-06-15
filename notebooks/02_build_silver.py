@@ -1,13 +1,13 @@
 # Databricks notebook source
 """Build silver tables with normalized geography and explicit quality flags."""
 
-import sys
+import re
+import unicodedata
 from collections.abc import Callable
 from functools import reduce
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
 
 if TYPE_CHECKING:
@@ -15,17 +15,91 @@ if TYPE_CHECKING:
     display: Callable[[object], None]
     spark: SparkSession
 
-sys.path.append(str(Path.cwd() / "src"))
+HMIS_INDICATOR_SERIALS = {
+    "anc_registered": "1.1",
+    "anc_four_plus": "1.2.7",
+    "institutional_deliveries": "2.2",
+    "live_birth_male": "4.1.1.a",
+    "live_birth_female": "4.1.1.b",
+    "fully_immunized_male": "9.2.4.a",
+    "fully_immunized_female": "9.2.4.b",
+}
 
-from data_readiness_desk.hmis import HMIS_INDICATOR_SERIALS, parse_hmis_measure_column  # noqa: E402
-from data_readiness_desk.spark_helpers import (  # noqa: E402
-    first_existing,
-    normalize_column_text,
-    rename_columns,
-    require_columns,
-    table_name,
-    write_delta,
-)
+
+def table_name(catalog_name: str, schema_name: str, table: str) -> str:
+    """Return a quoted Unity Catalog table name."""
+    return f"`{catalog_name}`.`{schema_name}`.`{table}`"
+
+
+def to_snake_case(value: str) -> str:
+    """Convert a source column name to snake_case."""
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    normalized = normalized.replace("%", " percent ").replace("&", " and ")
+    normalized = re.sub(r"[^0-9a-zA-Z]+", "_", normalized.lower())
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized or "unnamed_column"
+
+
+def normalize_column_text(column: str) -> Column:
+    """Normalize a text column for approximate matching."""
+    return F.when(
+        F.col(column).isNotNull(),
+        F.regexp_replace(F.regexp_replace(F.lower(F.trim(F.col(column))), r"[^0-9a-z ]+", ""), r"\s+", " "),
+    )
+
+
+def rename_columns(df: DataFrame) -> DataFrame:
+    """Rename dataframe columns to unique snake_case names."""
+    renamed = df
+    seen: dict[str, int] = {}
+    for original in df.columns:
+        proposed = to_snake_case(original)
+        count = seen.get(proposed, 0)
+        seen[proposed] = count + 1
+        new_name = proposed if count == 0 else f"{proposed}_{count + 1}"
+        renamed = renamed.withColumnRenamed(original, new_name)
+    return renamed
+
+
+def first_existing(columns: list[str], candidates: list[str]) -> str | None:
+    """Return the first candidate column that exists."""
+    for candidate in candidates:
+        if candidate in columns:
+            return candidate
+    return None
+
+
+def require_columns(df: DataFrame, required_columns: set[str], dataset_name: str) -> None:
+    """Fail fast when required columns are missing."""
+    missing = sorted(required_columns.difference(df.columns))
+    if missing:
+        raise ValueError(f"{dataset_name} is missing required columns: {missing}")
+
+
+def write_delta(df: DataFrame, catalog_name: str, schema_name: str, table: str) -> None:
+    """Overwrite a managed Delta table."""
+    (
+        df.write.mode("overwrite")
+        .option("overwriteSchema", "true")
+        .format("delta")
+        .saveAsTable(table_name(catalog_name, schema_name, table))
+    )
+
+
+def quoted_col(column_name: str) -> Column:
+    """Return a Spark column reference for names containing dots or punctuation."""
+    escaped_name = column_name.replace("`", "``")
+    return F.col(f"`{escaped_name}`")
+
+
+def parse_hmis_measure_column(column_name: str) -> tuple[str, str, str] | None:
+    """Parse an HMIS wide measure column into source column, month, and value type."""
+    cleaned_name = " ".join(str(column_name).replace("\u00a0", " ").split())
+    match = re.match(r"^(?P<month>[A-Za-z]+|Total)\s+-\s+(?P<value_type>[^\[]+)", cleaned_name)
+    if match is None:
+        return None
+    return (column_name, match.group("month"), " ".join(match.group("value_type").split()))
+
 
 dbutils.widgets.text("catalog", "data_readiness_desk")
 dbutils.widgets.text("schema", "pipeline")
@@ -109,10 +183,10 @@ def parsed_hmis_long(df: DataFrame) -> DataFrame:
 
     value_structs = [
         F.struct(
-            F.lit(measure_column.source_column).alias("source_column"),
-            F.lit(measure_column.month).alias("month"),
-            F.lit(measure_column.value_type).alias("value_type"),
-            F.col(measure_column.source_column).cast("string").alias("raw_value"),
+            F.lit(measure_column[0]).alias("source_column"),
+            F.lit(measure_column[1]).alias("month"),
+            F.lit(measure_column[2]).alias("value_type"),
+            quoted_col(measure_column[0]).cast("string").alias("raw_value"),
         )
         for measure_column in measure_columns
     ]
@@ -124,7 +198,7 @@ def parsed_hmis_long(df: DataFrame) -> DataFrame:
     return exploded.select(
         F.col("State").alias("state_name"),
         normalize_column_text("State").alias("state_normalized"),
-        F.regexp_replace(F.trim(F.col("S.No.").cast("string")), "'", "").alias("serial_number"),
+        F.regexp_replace(F.trim(quoted_col("S.No.").cast("string")), "'", "").alias("serial_number"),
         F.regexp_replace(F.trim(F.col("Parameters").cast("string")), "\u00a0", " ").alias("parameter"),
         F.trim(F.col("Type").cast("string")).alias("reporting_type"),
         F.col("measure.source_column").alias("source_column"),
@@ -144,6 +218,60 @@ def parsed_hmis_long(df: DataFrame) -> DataFrame:
 pincode_bronze = spark.table(table_name(catalog, schema, "bronze_india_post_pincode_directory"))
 nfhs_bronze = spark.table(table_name(catalog, schema, "bronze_nfhs5_district_health_indicators"))
 hmis_bronze = spark.table(table_name(catalog, schema, "bronze_hmis_2019_20_slice"))
+facilities_bronze = spark.table(table_name(catalog, schema, "bronze_facilities"))
+
+require_columns(
+    facilities_bronze,
+    {
+        "unique_id",
+        "cluster_id",
+        "name",
+        "latitude",
+        "longitude",
+        "address_stateOrRegion",
+        "address_zipOrPostcode",
+        "capability",
+        "numberDoctors",
+        "capacity",
+        "yearEstablished",
+        "recency_of_page_update",
+    },
+    "Virtue Foundation facilities",
+)
+facilities_geo = (
+    facilities_bronze.select(
+        "unique_id",
+        "cluster_id",
+        "name",
+        F.col("address_stateOrRegion").alias("source_state_name"),
+        normalize_column_text("address_stateOrRegion").alias("source_state_normalized"),
+        F.regexp_extract(F.col("address_zipOrPostcode").cast("string"), r"\d{6}", 0).alias("pincode"),
+        F.col("latitude").cast("double").alias("latitude"),
+        F.col("longitude").cast("double").alias("longitude"),
+        "capability",
+        F.col("numberDoctors").alias("number_doctors_raw"),
+        F.col("capacity").alias("capacity_raw"),
+        F.col("yearEstablished").alias("year_established_raw"),
+        F.col("recency_of_page_update").alias("recency_of_page_update_raw"),
+    )
+    .withColumn(
+        "has_valid_coordinates",
+        F.col("latitude").between(6.0, 38.0) & F.col("longitude").between(68.0, 98.0),
+    )
+    .withColumn("has_pincode", F.length(F.col("pincode")) == 6)
+    .withColumn("has_capability_text", F.col("capability").isNotNull() & (F.length(F.col("capability")) > 0))
+    .withColumn(
+        "care_substance_missing_count",
+        F.when(F.col("number_doctors_raw").isNull() | (F.col("number_doctors_raw") == "null"), 1).otherwise(0)
+        + F.when(F.col("capacity_raw").isNull() | (F.col("capacity_raw") == "null"), 1).otherwise(0)
+        + F.when(F.col("year_established_raw").isNull() | (F.col("year_established_raw") == "null"), 1).otherwise(0)
+        + F.when(
+            F.col("recency_of_page_update_raw").isNull() | (F.col("recency_of_page_update_raw") == "null"), 1
+        ).otherwise(0),
+    )
+    .withColumn("geo_grain", F.lit("point"))
+    .withColumn("_recorded_at_utc", F.current_timestamp())
+)
 
 pincode = rename_columns(pincode_bronze)
 require_columns(
@@ -243,6 +371,8 @@ hmis_indicator_totals = (
 
 quality_checks = spark.createDataFrame(
     [
+        ("facilities_required_columns_present", "pass", len(facilities_bronze.columns)),
+        ("facilities_valid_coordinate_count", "pass", facilities_geo.filter(F.col("has_valid_coordinates")).count()),
         ("pincode_required_columns_present", "pass", len(pincode.columns)),
         ("pincode_lookup_is_unique", "pass", pin_lookup.select("pincode").distinct().count()),
         ("nfhs_geography_columns_detected", "pass", 2),
@@ -254,6 +384,7 @@ quality_checks = spark.createDataFrame(
     ["check_name", "status", "observed_value"],
 ).withColumn("_recorded_at_utc", F.current_timestamp())
 
+write_delta(facilities_geo, catalog, schema, "silver_facilities_geo")
 write_delta(pincode, catalog, schema, "silver_pincode_post_offices")
 write_delta(pin_lookup, catalog, schema, "silver_pincode_lookup")
 write_delta(nfhs_quality_long, catalog, schema, "silver_nfhs_indicator_quality_long")
@@ -265,6 +396,7 @@ write_delta(quality_checks, catalog, schema, "pipeline_quality_checks")
 display(
     spark.createDataFrame(
         [
+            ("silver_facilities_geo", facilities_geo.count()),
             ("silver_pincode_post_offices", pincode.count()),
             ("silver_pincode_lookup", pin_lookup.count()),
             ("silver_nfhs_indicator_quality_long", nfhs_quality_long.count()),

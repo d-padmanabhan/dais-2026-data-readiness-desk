@@ -85,6 +85,9 @@ def write_delta(df: DataFrame, catalog: str, schema: str, table: str) -> None:
     (
         df.write.mode("overwrite")
         .option("overwriteSchema", "true")
+        .option("delta.columnMapping.mode", "name")
+        .option("delta.minReaderVersion", "2")
+        .option("delta.minWriterVersion", "5")
         .format("delta")
         .saveAsTable(table_name(catalog, schema, table))
     )

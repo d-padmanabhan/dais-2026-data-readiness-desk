@@ -5,9 +5,18 @@ source: Census India Sample Registration System 2020
 grain: state
 classification: public
 expected_file: data/srs_2020_state.csv
+generated_by: scripts/generate_srs_2020_state_csv.py
+source_pdf: data/SRS_Bulletin_2020_Vol_55_No_1.pdf
 required_columns:
   - state
+  - birth_rate_total
+  - death_rate_total
+  - natural_growth_rate_total
+  - infant_mortality_rate_total
 quality_rules:
+  - name: generated_from_bulletin_table_1
+    severity: fail
+    description: CSV must be generated from SRS Bulletin 2020 Table 1 values.
   - name: geo_grain_present
     severity: fail
     description: Silver outputs must include geo_grain=state.

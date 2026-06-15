@@ -11,39 +11,41 @@
 
 - [ ] Upload or copy source files into the Volume.
   - [x] `hmis_2019_20_slice.csv`
-  - [ ] `Facilities.xlsx` when available
+  - [x] Facilities source table access granted
   - [ ] `india_post_pincode_directory.csv` when available
-  - [ ] `srs_2020_state.csv` when available
-  - [ ] `india_districts.geojson` when available
+  - [x] `srs_2020_state.csv` generated locally and uploaded
+  - [x] `india_districts.geojson` generated locally and uploaded
 
-- [ ] Run bundle pipeline in dev.
+- [x] Run bundle pipeline in dev.
   - [x] `databricks bundle validate --target dev`
-  - [ ] `databricks bundle deploy --target dev`
-  - [ ] `databricks bundle run virtue_foundation_pipeline --target dev`
+  - [x] `databricks bundle deploy --target dev`
+  - [x] `databricks bundle run virtue_foundation_pipeline --target dev`
 
-- [ ] Validate currently implemented outputs.
-  - [ ] `bronze_hmis_2019_20_slice`
-  - [ ] `silver_hmis_2019_20_long`
-  - [ ] `silver_hmis_2019_20_indicator_totals`
-  - [ ] `gold_hmis_state_indicator_summary`
+- [x] Validate currently implemented outputs.
+  - [x] `bronze_hmis_2019_20_slice`
+  - [x] `silver_hmis_2019_20_long`
+  - [x] `silver_hmis_2019_20_indicator_totals`
+  - [x] `gold_hmis_state_indicator_summary`
 
 ## Build Work
 
 - [x] Add preflight validation task.
   - [x] Check source Volume exists.
   - [x] Check expected files exist.
-  - [ ] Check NFHS table path is configured.
+  - [x] Check facilities table path is configured and readable.
+  - [ ] Check NFHS table path is configured and readable.
   - [x] Fail with clear messages before Spark reads.
 
 - [ ] Build facility location lens.
-  - [ ] Ingest `Facilities.xlsx`.
-  - [ ] Ingest `india_districts.geojson`.
+  - [x] Ingest facilities shared table into bronze.
+  - [x] Generate `india_districts.geojson` locally.
+  - [x] Upload `india_districts.geojson`.
   - [ ] Build point-in-polygon assignment.
-  - [ ] Publish `silver_facilities_geo`.
+  - [x] Publish first-pass `silver_facilities_geo`.
   - [ ] Publish `gold_facility_verdicts`.
 
 - [ ] Build disease lens.
-  - [ ] Decide whether state-grain HMIS fallback is acceptable for demo.
+  - [x] Publish state-grain HMIS fallback summary for demo.
   - [ ] If district-grain HMIS arrives, update the contract and silver pipeline.
   - [ ] Add denominator normalization for institutional delivery.
   - [ ] Publish `gold_district_verdicts`.
@@ -63,13 +65,14 @@
   - [ ] Otherwise publish static `gold_coverage_predictions`.
   - [ ] Document the fallback honestly in demo notes.
 
-- [ ] Wire Streamlit app.
+- [ ] Wire Free Databricks App.
   - [ ] Read real cached gold tables.
   - [ ] Add verdict card.
   - [ ] Add map or table view.
   - [ ] Add ranked fixes.
   - [ ] Add before/after toggle from cached rows.
   - [ ] Enforce read-only, gold-only queries.
+  - [ ] Confirm the app runs as a Free Databricks App, not externally hosted web app.
 
 ## Demo Prep
 
