@@ -4,13 +4,20 @@ This runbook covers the first Databricks execution path.
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Validate Configuration](#validate-configuration)
-- [Deploy and Run](#deploy-and-run)
-- [CI Configuration](#ci-configuration)
-- [Manual Notebook Run Order](#manual-notebook-run-order)
-- [Validation Checks](#validation-checks)
-- [Common Issues](#common-issues)
+- [Runbook](#runbook)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Data Landing Files](#data-landing-files)
+  - [Validate Configuration](#validate-configuration)
+  - [Deploy and Run](#deploy-and-run)
+  - [CI Configuration](#ci-configuration)
+  - [Manual Notebook Run Order](#manual-notebook-run-order)
+  - [Validation Checks](#validation-checks)
+  - [Common Issues](#common-issues)
+    - [Cannot Create Catalog](#cannot-create-catalog)
+    - [Source Files Not Found](#source-files-not-found)
+    - [NFHS Geography Columns Not Detected](#nfhs-geography-columns-not-detected)
+    - [Metrics Are Null in the Underserved Candidate Table](#metrics-are-null-in-the-underserved-candidate-table)
 
 ## Prerequisites
 
@@ -18,6 +25,18 @@ This runbook covers the first Databricks execution path.
 - Unity Catalog enabled workspace.
 - Permission to create or write tables in the chosen catalog and schema.
 - Source CSV files uploaded to a Unity Catalog Volume.
+
+## Data Landing Files
+
+Vibhu will upload source files under [data](../data/). Expected filenames:
+
+- `facilities.xlsx`
+- `india_post_pincode_directory.csv`
+- `hmis_2019_20_slice.csv`
+- `srs_2020_state.csv`
+- `india_districts.geojson`
+
+Upload these files to `/Volumes/drd/bronze/files/` or the configured source volume before running the bronze notebook. NFHS-5 may be referenced as a provided Databricks table instead of a local file.
 
 ## Validate Configuration
 
@@ -73,6 +92,7 @@ After a successful run:
 - `pipeline_quality_checks` should show `pass` for required column and indicator-detection checks.
 - `gold_pincode_health_enrichment` should show match statuses, not just matched rows.
 - `gold_underserved_district_candidates` should produce ranked districts.
+- App tables such as `gold_facility_verdicts`, `gold_district_verdicts`, and `gold_fix_ranking` should be precomputed before the Streamlit app demo.
 
 ## Common Issues
 

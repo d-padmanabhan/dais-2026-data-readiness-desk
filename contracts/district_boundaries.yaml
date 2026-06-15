@@ -1,0 +1,24 @@
+---
+dataset: india_district_boundaries
+owner: data-readiness-desk-team
+source: geoBoundaries or DataMeet India Maps
+grain: district_polygon
+classification: public
+expected_file: data/india_districts.geojson
+required_fields:
+  - district
+  - state
+  - geometry
+quality_rules:
+  - name: geometry_valid
+    severity: fail
+    description: Polygon geometries must be valid before point-in-polygon assignment.
+  - name: crs_is_wgs84
+    severity: fail
+    description: Boundaries must be read or converted to EPSG:4326 before joining facility points.
+  - name: polygon_assignment_primary
+    severity: fail
+    description: Valid facility coordinates should use polygon-derived district as the primary location key.
+notes:
+  - Boundary vintage and district split differences should be documented before comparing to NFHS or HMIS.
+  - String matching district names is fallback behavior only.

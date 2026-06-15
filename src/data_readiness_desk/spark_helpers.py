@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pyspark.sql import Column, DataFrame, SparkSession
 from pyspark.sql import functions as F
 
-from hackathon_2026.normalization import to_snake_case
+from data_readiness_desk.normalization import to_snake_case
 
 
 def table_name(catalog: str, schema: str, table: str) -> str:

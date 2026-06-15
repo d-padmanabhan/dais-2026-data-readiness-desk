@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 sys.path.append(str(Path.cwd() / "src"))
 
-from hackathon_2026.spark_helpers import table_name  # noqa: E402
+from data_readiness_desk.spark_helpers import table_name  # noqa: E402
 
 dbutils.widgets.text("catalog", "hackathon")
 dbutils.widgets.text("schema", "virtue_foundation")

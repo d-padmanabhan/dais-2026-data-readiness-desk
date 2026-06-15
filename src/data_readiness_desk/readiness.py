@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from hackathon_2026.normalization import normalize_place_name
+from data_readiness_desk.normalization import normalize_place_name
 
 
 @dataclass(frozen=True)

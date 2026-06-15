@@ -1,6 +1,6 @@
 """Tests for source-specific normalization helpers."""
 
-from hackathon_2026.normalization import normalize_place_name, parse_nfhs_indicator, to_snake_case
+from data_readiness_desk.normalization import normalize_place_name, parse_nfhs_indicator, to_snake_case
 
 
 def test_to_snake_case_handles_human_readable_indicator_names() -> None:

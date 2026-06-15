@@ -5,6 +5,7 @@ This log captures decisions that future engineers should understand before chang
 ## Table of Contents
 
 - [Use Databricks Bundle For Deployment](#use-databricks-bundle-for-deployment)
+- [Precompute Scores Before The Demo](#precompute-scores-before-the-demo)
 - [Treat PIN Geography As A Readiness Signal](#treat-pin-geography-as-a-readiness-signal)
 - [Preserve NFHS Suppression And Low-Sample Flags](#preserve-nfhs-suppression-and-low-sample-flags)
 - [Keep Raw Data Out Of Git](#keep-raw-data-out-of-git)
@@ -19,6 +20,16 @@ Why it adds value:
 - Keeps deployable Databricks resources tied to a Git commit.
 - Lets CI validate the bundle before anyone deploys.
 - Makes dev, staging, and prod targets explicit.
+
+## Precompute Scores Before The Demo
+
+Decision: compute Trust Verdicts, fixes, model predictions, and before/after states into cached gold tables before the live demo.
+
+Why it adds value:
+
+- Protects Databricks Free Edition quota.
+- Keeps the Streamlit app fast and reliable.
+- Ensures the demo can explain exactly which precomputed evidence supports each verdict.
 
 ## Treat PIN Geography As A Readiness Signal
 

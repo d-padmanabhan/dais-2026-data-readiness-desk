@@ -1,0 +1,24 @@
+---
+bands:
+  green_min: 0.85
+  amber_min: 0.60
+corroboration_thresholds:
+  institutional_delivery:
+    green_gap_points: 8
+    red_gap_points: 20
+  full_immunization:
+    green_gap_points: 15
+    red_gap_points: 35
+  anc_4_plus:
+    green_gap_points: 12
+    red_gap_points: 28
+weights:
+  srs_weak_signal: 0.5
+  extracted_confidence: 0.6
+missingness:
+  cap_band_at: amber
+  blank_high_weight_fix_boost: true
+quota_safety:
+  app_reads_cached_gold_only: true
+  no_live_training_during_demo: true
+  genie_user_initiated_only: true

@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "virtue-foundation-hackathon-2026"
+name = "data-readiness-desk"
 version = "0.1.0"
 description = "Databricks DAIS 2026 hackathon starter for India healthcare geography and public health enrichment."
 readme = "README.md"
@@ -44,7 +44,7 @@ select = ["B", "E", "F", "I", "N", "UP", "W"]
   "F821", # Databricks injects dbutils, display, and spark at runtime.
   "N812", # PySpark convention is functions as F.
 ]
-"src/hackathon_2026/spark_helpers.py" = [
+"src/data_readiness_desk/spark_helpers.py" = [
   "N812", # PySpark convention is functions as F.
 ]
 
@@ -52,6 +52,7 @@ select = ["B", "E", "F", "I", "N", "UP", "W"]
 python_version = "3.14"
 strict = true
 files = ["src", "tests"]
+exclude = ["app/"]
 
 [[tool.mypy.overrides]]
 module = ["pyspark.*"]

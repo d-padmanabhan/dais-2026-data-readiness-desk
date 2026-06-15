@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 sys.path.append(str(Path.cwd() / "src"))
 
-from hackathon_2026.spark_helpers import (  # noqa: E402
+from data_readiness_desk.spark_helpers import (  # noqa: E402
     first_existing,
     normalize_column_text,
     rename_columns,

@@ -1,0 +1,19 @@
+---
+dataset: srs_2020_state
+owner: data-readiness-desk-team
+source: Census India Sample Registration System 2020
+grain: state
+classification: public
+expected_file: data/srs_2020_state.csv
+required_columns:
+  - state
+quality_rules:
+  - name: geo_grain_present
+    severity: fail
+    description: Silver outputs must include geo_grain=state.
+  - name: used_as_weak_anchor_only
+    severity: fail
+    description: SRS state-level values can nudge district confidence but cannot alone produce a green verdict.
+notes:
+  - SRS is a weak corroboration anchor because its geography is state-level while the disease lens is district-level.
+  - Grain mismatch must be visible in app caveats and gold outputs.

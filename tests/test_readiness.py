@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from hackathon_2026.readiness import PincodeOffice, build_pincode_readiness
+from data_readiness_desk.readiness import PincodeOffice, build_pincode_readiness
 
 
 def load_fixture_rows() -> list[PincodeOffice]:

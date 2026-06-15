@@ -1,0 +1,24 @@
+---
+dataset: hmis_2019_20_slice
+owner: data-readiness-desk-team
+source: data.gov.in HMIS district slice
+grain: district_indicator
+classification: public
+expected_file: data/hmis_2019_20_slice.csv
+scope: small_slice_2_to_3_states
+required_columns:
+  - state
+  - district
+quality_rules:
+  - name: denominator_formula_documented
+    severity: fail
+    description: HMIS numerators must be converted to comparable rates with an explicit denominator formula.
+  - name: geo_grain_present
+    severity: fail
+    description: Silver outputs must include geo_grain=district.
+  - name: source_period_visible
+    severity: warn
+    description: HMIS source period must be visible when comparing to NFHS-5.
+notes:
+  - Institutional delivery is the hero reconciliation indicator.
+  - HMIS values should not be compared directly to NFHS percentages without denominator normalization.

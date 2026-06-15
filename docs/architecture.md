@@ -20,6 +20,7 @@ Hackathon track: Problem 4, Data Readiness Desk. The architecture is designed to
 - Preserve ambiguity instead of forcing uncertain geography into exact joins.
 - Create demo-ready tables for district health context and facility enrichment.
 - Surface readiness issues as first-class outputs for planners and agents.
+- Precompute Trust Verdicts and fixes so the app reads cached gold outputs only.
 
 ## Data Flow
 
@@ -85,12 +86,14 @@ Gold creates outputs for the hackathon story:
 
 - [Diagrams](diagrams.md)
 - [Decision Log](decision_log.md)
+- [Implementation Status](implementation_status.md)
 - [Data Quality Decisions](data_quality.md)
 - [Data Dictionary](data_dictionary.md)
 
 ## Future Extensions
 
-- Add facility input data and enrich facilities through `gold_pincode_health_enrichment`.
-- Add spatial point-in-polygon assignment for facilities with latitude and longitude.
-- Add Databricks SQL dashboards over the gold tables.
-- Add a serving endpoint or app-layer agent that answers questions using only gold tables.
+- Implement the full facility location lens using `Facilities.xlsx` and district polygons.
+- Add HMIS/SRS ingestion and denominator-normalized disease corroboration.
+- Add AutoML or static fallback predictions into `gold_coverage_predictions`.
+- Implement `ai_extract` for facility capability provenance confidence.
+- Wire the Streamlit app to cached `gold_*_verdicts` and `gold_fix_ranking`.

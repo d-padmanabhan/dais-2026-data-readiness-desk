@@ -54,12 +54,15 @@ Both datasets are public-sector datasets published through data.gov.in under the
 
 ## Project Layout
 
+- [app](app): Streamlit Databricks App scaffold for cached Trust Verdict reads
+- [config/scoring.yaml](config/scoring.yaml): tunable Trust Verdict thresholds and quota-safety defaults
+- [data](data): landing folder and upload guide for Vibhu's source files
 - [databricks.yml](databricks.yml): Databricks bundle job and variables
 - [notebooks/01_ingest_bronze.py](notebooks/01_ingest_bronze.py): CSV ingestion from Unity Catalog Volume
 - [notebooks/02_build_silver.py](notebooks/02_build_silver.py): cleanup, geography normalization, and quality flags
 - [notebooks/03_build_gold.py](notebooks/03_build_gold.py): enrichment-ready gold outputs
 - [notebooks/04_demo_queries.py](notebooks/04_demo_queries.py): demo queries and an agent prompt
-- [src/hackathon_2026](src/hackathon_2026): reusable helpers with local tests
+- [src/data_readiness_desk](src/data_readiness_desk): reusable helpers with local tests
 - [contracts](contracts): machine-readable source dataset contracts and quality expectations
 - [docs](docs): architecture, diagrams, decision log, data quality, and demo narrative
 - [tests](tests): local tests for pure Python normalization helpers
@@ -82,6 +85,7 @@ Key engineering references:
 - [Architecture](docs/architecture.md)
 - [Diagrams](docs/diagrams.md)
 - [Decision Log](docs/decision_log.md)
+- [Implementation Status](docs/implementation_status.md)
 - [Data Quality Decisions](docs/data_quality.md)
 - [Data Dictionary](docs/data_dictionary.md)
 
@@ -134,8 +138,12 @@ You can also run the notebooks manually in Databricks in this order:
 
 Bronze tables:
 
+- `bronze_facilities`
 - `bronze_india_post_pincode_directory`
 - `bronze_nfhs5_district_health_indicators`
+- `bronze_hmis`
+- `bronze_srs`
+- `bronze_district_boundaries`
 
 Silver tables:
 
@@ -147,9 +155,13 @@ Silver tables:
 
 Gold tables:
 
+- `gold_facility_verdicts`
 - `gold_district_health_context`
 - `gold_pincode_health_enrichment`
 - `gold_underserved_district_candidates`
+- `gold_district_verdicts`
+- `gold_fix_ranking`
+- `gold_coverage_predictions`
 
 ## Data Quality Position
 

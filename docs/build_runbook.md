@@ -1,11 +1,25 @@
-# BUILD_RUNBOOK.md — Data Readiness Desk
+# Data Readiness Desk Build Runbook
 
-> Companion to `Requirements.md`. Ordered, executable steps for a coding agent or solo CLI build on **Databricks Free Edition**.
-> **Golden rule (quota cliff):** compute every score ONCE into a cached gold table. The app and the demo only ever READ. Never recompute or train live.
+> [!NOTE]
+> Companion to [Data Readiness Desk Requirements](requirements.md). Ordered, executable steps for a coding agent or solo CLI build on Databricks Free Edition.
 
----
+> [!IMPORTANT]
+> Quota rule: compute every score once into a cached gold table. The app and demo only read cached outputs. Never recompute or train live.
 
-## Phase 0 — Local setup (~15 min, off the clock if possible)
+## Table of Contents
+
+- [Phase 0 - Local Setup](#phase-0---local-setup)
+- [Phase 1 - Provision Unity Catalog](#phase-1---provision-unity-catalog)
+- [Phase 2 - Bronze Ingest](#phase-2---bronze-ingest)
+- [Phase 3 - Silver Clean Normalize Resolve Geography](#phase-3---silver-clean-normalize-resolve-geography)
+- [Phase 4 - AutoML Classifier](#phase-4---automl-classifier)
+- [Phase 5 - Gold Score Everything](#phase-5---gold-score-everything)
+- [Phase 6 - Streamlit App](#phase-6---streamlit-app)
+- [Phase 7 - Deploy And Dry Run](#phase-7---deploy-and-dry-run)
+- [Time Budget](#time-budget)
+- [Quota-Safety Checklist](#quota-safety-checklist)
+
+## Phase 0 - Local Setup
 
 ```bash
 # Databricks CLI v0.250.0+ required for apps + bundles
@@ -24,11 +38,10 @@ mkdir -p notebooks app data
 #   catalog: drd   schema: gold (+ bronze, silver)
 ```
 
-**Owner split (from spec §3):** Engineer runs Phases 1–5 (data + model). You run Phases 6–7 (app + demo). Phases can overlap once silver lands.
+**Owner split (from spec section 3):** Engineer runs Phases 1-5 (data + model). You run Phases 6-7 (app + demo). Phases can overlap once silver lands.
 
----
 
-## Phase 1 — Provision Unity Catalog (~10 min)
+## Phase 1 - Provision Unity Catalog
 
 Run in a notebook (`notebooks/00_setup.py`) on serverless:
 
@@ -49,11 +62,10 @@ databricks fs cp data/srs_2020_state.csv dbfs:/Volumes/drd/bronze/files/
 # district boundary polygons (geojson) too
 databricks fs cp data/india_districts.geojson dbfs:/Volumes/drd/bronze/files/
 ```
-NFHS-5 is already a provided table — just note its full name for joins.
+NFHS-5 is already a provided table - just note its full name for joins.
 
----
 
-## Phase 2 — Bronze ingest (~20 min)
+## Phase 2 - Bronze Ingest
 
 `notebooks/01_bronze.py`. Land everything raw, no cleaning yet.
 
@@ -61,7 +73,7 @@ NFHS-5 is already a provided table — just note its full name for joins.
 import pandas as pd
 V = "/Volumes/drd/bronze/files"
 
-# Facilities (100 rows) — pandas is fine at this size
+# Facilities (100 rows) - pandas is fine at this size
 fac = pd.read_excel(f"{V}/Facilities.xlsx")
 spark.createDataFrame(fac).write.mode("overwrite").saveAsTable("drd.bronze.facilities")
 
@@ -75,13 +87,12 @@ for name, fn in [("pincode","india_post_pincode_directory.csv"),
 
 **Quota note:** read once, write Delta, never re-read raw in later phases.
 
----
 
-## Phase 3 — Silver: clean, normalize, resolve geography (~45 min)
+## Phase 3 - Silver Clean Normalize Resolve Geography
 
 `notebooks/02_silver.py`. This is where the denominator + grain discipline lives.
 
-### 3a. Facilities — geography resolution (location lens inputs)
+### Facilities Geography Resolution
 ```python
 # point-in-polygon: assign each facility to a district from coordinates
 # (use geopandas; sjoin facility points to drd.bronze districts geojson)
@@ -90,20 +101,20 @@ fac = spark.table("drd.bronze.facilities").toPandas()
 gdf = gpd.GeoDataFrame(fac, geometry=gpd.points_from_xy(fac.longitude, fac.latitude), crs="EPSG:4326")
 dist = gpd.read_file(f"{V}/india_districts.geojson")[["district","state","geometry"]]
 joined = gpd.sjoin(gdf, dist, how="left", predicate="within")
-# conflict flag: stated state vs polygon state (spec §5.1)
+# conflict flag: stated state vs polygon state (spec section 5.1)
 joined["geo_conflict"] = joined["address_stateOrRegion"].str.lower() != joined["state"].str.lower()
 # resolution rule: valid coords exist here (100% fill) -> polygon wins, conflict = fixable amber
 spark.createDataFrame(joined.drop(columns="geometry")).write.mode("overwrite").saveAsTable("drd.silver.facilities_geo")
 ```
 
-### 3b. NFHS-5 — parse the missingness markers (spec §4.3)
+### NFHS-5 Missingness Parsing
 ```python
 # CRITICAL: distinguish * (suppressed), (parenthesized) low-conf, blank
 # produce per-indicator: value (float|null) + quality_flag in {ok, suppressed, lowconf, blank}
 # snake_case the long column names while here
 ```
 
-### 3c. HMIS — denominator normalization (spec §5.2, the engine)
+### HMIS Denominator Normalization
 ```python
 # HMIS numerator = facility activity counts; convert to a RATE comparable to NFHS %
 # institutional delivery: deliveries_in_facility / expected_births
@@ -111,16 +122,15 @@ spark.createDataFrame(joined.drop(columns="geometry")).write.mode("overwrite").s
 # Document the denominator formula in a comment + surface it in the app's why-panel.
 ```
 
-### 3d. District name harmonization
+### District Name Harmonization
 ```python
 # NFHS, HMIS, polygons all spell districts differently.
 # Prefer the polygon-derived district key everywhere; map NFHS/HMIS names to it.
 # Keep an explicit `geo_grain` column on every silver table: 'point' | 'district' | 'state'.
 ```
 
----
 
-## Phase 4 — AutoML classifier (~40 min, TRAIN ONCE) (spec §6)
+## Phase 4 - AutoML Classifier
 
 `notebooks/03_model.py`.
 
@@ -135,7 +145,7 @@ summary = automl.regress(train, target_col="hmis_delivery_rate", timeout_minutes
 import mlflow
 mlflow.register_model(summary.best_trial.model_path, "drd.gold.coverage_predictor")
 ```
-Then **batch-score offline** and save predictions — no live inference in demo:
+Then **batch-score offline** and save predictions - no live inference in demo:
 ```python
 preds = ...  # model.predict over all districts incl. suppressed-NFHS ones
 preds.write.mode("overwrite").saveAsTable("drd.gold.coverage_predictions")
@@ -143,14 +153,13 @@ preds.write.mode("overwrite").saveAsTable("drd.gold.coverage_predictions")
 ```
 **Fallback if behind:** skip AutoML, write a static `coverage_predictions` table from a simple rule. Still satisfies "model on platform" as architecture; note it in the pitch.
 
----
 
-## Phase 5 — Gold: score everything (~50 min, the heart)
+## Phase 5 - Gold Score Everything
 
-`notebooks/04_gold_scores.py`. Encodes spec §4. Pre-compute ALL verdicts.
+`notebooks/04_gold_scores.py`. Encodes spec section 4. Pre-compute ALL verdicts.
 
 ```python
-CFG = dict(  # spec §11 — single tunable block
+CFG = dict(  # spec section 11 - single tunable block
   BAND_GREEN_MIN=0.85, BAND_AMBER_MIN=0.60,
   DELIV_GAP_GREEN=8, DELIV_GAP_RED=20,
   IMMUN_GAP_GREEN=15, IMMUN_GAP_RED=35,
@@ -169,7 +178,7 @@ CFG = dict(  # spec §11 — single tunable block
 #   drd.gold.fix_ranking
 ```
 
-### Facility capability extraction (spec §7) — do in this phase
+### Facility Capability Extraction
 ```sql
 -- ai_extract is a GA built-in; no endpoint to provision
 CREATE OR REPLACE TABLE drd.gold.facility_caps AS
@@ -179,7 +188,7 @@ FROM drd.silver.facilities_geo;
 -- extracted values get EXTRACTED_CONFIDENCE (0.6) weight, tagged provenance='inferred'
 ```
 
-### Fix ranking (spec §4.6)
+### Fix Ranking
 ```python
 # rank = (est_score_lift_if_fixed) * (district_burden * population_affected)
 # missing-data fixes on HIGH-WEIGHT fields get a priority boost
@@ -194,9 +203,8 @@ for t in ["facility_verdicts","district_verdicts","fix_ranking"]:
     df.filter("band='green'").show(3)  # sanity: greens look right, no green on suppressed
 ```
 
----
 
-## Phase 6 — Streamlit app (~60 min) (spec §9)
+## Phase 6 - Streamlit App
 
 Project files in `app/`:
 
@@ -249,13 +257,12 @@ if q:
     ...
 ```
 
-**Genie (spec §1 limits):** wire the search box to a Genie space ONLY for NL parsing of the user's question, user-initiated, and cache the parse. Do not call Genie on every render. If Genie quota is a worry, ship a simple keyword parser for the demo and mention Genie as the production interface.
+**Genie (spec section 1 limits):** wire the search box to a Genie space ONLY for NL parsing of the user's question, user-initiated, and cache the parse. Do not call Genie on every render. If Genie quota is a worry, ship a simple keyword parser for the demo and mention Genie as the production interface.
 
-**Before/after demo trick:** pre-compute both the current verdict AND the post-fix verdict in gold (two rows / a `state` column). "Apply fix" just swaps which row is shown — zero compute, instant, quota-safe.
+**Before/after demo trick:** pre-compute both the current verdict AND the post-fix verdict in gold (two rows / a `state` column). "Apply fix" just swaps which row is shown - zero compute, instant, quota-safe.
 
----
 
-## Phase 7 — Deploy & dry run (~30 min)
+## Phase 7 - Deploy And Dry Run
 
 ```bash
 # create the app first (CLI), then deploy source
@@ -266,29 +273,27 @@ databricks apps deploy drd-desk \
 # open the app URL from the overview page; check Logs tab if it doesn't start
 ```
 
-Dry run against acceptance criteria (spec §10): location scores 100 facilities ✓ · disease reconciles ≥1 district w/ denominator explanation ✓ · model predictions table present ✓ · ai_extract tagged partial-confidence ✓ · verdict card shows band+number+reason ✓ · ranked fixes render ✓ · one before/after works ✓ · zero live compute ✓.
+Dry run against acceptance criteria (spec section 10): location scores 100 facilities PASS - disease reconciles ≥1 district w/ denominator explanation PASS - model predictions table present PASS - ai_extract tagged partial-confidence PASS - verdict card shows band+number+reason PASS - ranked fixes render PASS - one before/after works PASS - zero live compute PASS.
 
----
 
 ## Time budget (6 hrs, 2 builders)
 
 | Phase | Engineer | You |
 |-------|----------|-----|
-| 0–1 setup/catalog | H1 | (help / start app skeleton) |
-| 2–3 bronze/silver | H1–H2 | app shell + verdict card layout |
+| 0-1 setup/catalog | H1 | (help / start app skeleton) |
+| 2-3 bronze/silver | H1-H2 | app shell + verdict card layout |
 | 4 AutoML | H3 | map view |
-| 5 gold scores + ai_extract | H3–H4 | fix panel + before/after |
+| 5 gold scores + ai_extract | H3-H4 | fix panel + before/after |
 | 6 app wiring | (support) | H5 |
 | 7 deploy + dry run | H6 | H6 |
 
-**Cut-order if behind (spec §3):** ANC indicator → SRS anchor → immunization showcase → AutoML (swap to static table). NEVER cut: location lens, institutional-delivery corroboration, one before/after fix.
+**Cut-order if behind (spec section 3):** ANC indicator -> SRS anchor -> immunization showcase -> AutoML (swap to static table). NEVER cut: location lens, institutional-delivery corroboration, one before/after fix.
 
----
 
-## Quota-safety checklist (Free Edition — re-read before demo)
+## Quota-Safety Checklist
 - [ ] All verdicts pre-computed to gold; app issues SELECTs only.
 - [ ] Model trained once, predictions batch-scored to a table.
 - [ ] Genie calls user-initiated + cached (or keyword parser for demo).
 - [ ] No `.write` or training cells run during the live demo.
-- [ ] Data slices small (100 facilities, 2–3 HMIS states).
+- [ ] Data slices small (100 facilities, 2-3 HMIS states).
 - [ ] One serverless SQL warehouse, started before demo, not spun per query.

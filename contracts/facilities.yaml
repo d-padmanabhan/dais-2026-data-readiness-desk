@@ -1,0 +1,43 @@
+---
+dataset: virtue_foundation_facilities
+owner: data-readiness-desk-team
+source: Virtue Foundation hackathon facility slice
+grain: facility_point
+classification: event_dataset
+expected_file: data/Facilities.xlsx
+known_slice_facts:
+  row_count: 100
+  country: India
+  cluster_id_unique: true
+required_columns:
+  - cluster_id
+  - latitude
+  - longitude
+  - address
+  - zip
+  - name
+high_value_sparse_columns:
+  - numberDoctors
+  - capacity
+  - yearEstablished
+  - recency_of_page_update
+ignored_dead_columns:
+  - area
+  - countries
+  - acceptsVolunteers
+quality_rules:
+  - name: coordinates_present_and_in_india
+    severity: fail
+    description: Facility coordinates must be present and within valid India ranges.
+  - name: cluster_id_unique
+    severity: fail
+    description: Entity resolution is pre-resolved; duplicate cluster IDs break the facility lens.
+  - name: capability_text_available_for_extraction
+    severity: warn
+    description: Capability text should be available for ai_extract-derived facility attributes.
+  - name: sparse_care_substance_fields_cap_green
+    severity: warn
+    description: Sparse high-value fields should prevent facility profiles from receiving green verdicts.
+notes:
+  - Point-in-polygon district assignment is primary when coordinates are valid.
+  - PIN-derived geography is a fallback or corroboration signal, not the authoritative district assignment.
