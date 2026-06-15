@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "virtue-foundation-hackathon-2026"
+version = "0.1.0"
+description = "Databricks DAIS 2026 hackathon starter for India healthcare geography and public health enrichment."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "bandit",
+  "black",
+  "isort",
+  "mypy",
+  "pre-commit",
+  "pylint",
+  "pytest",
+  "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "N", "UP", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/*.py" = [
+  "F821", # Databricks injects dbutils, display, and spark at runtime.
+  "N812", # PySpark convention is functions as F.
+]
+"src/hackathon_2026/spark_helpers.py" = [
+  "N812", # PySpark convention is functions as F.
+]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["pyspark.*"]
+ignore_missing_imports = true
+
+[tool.pylint.main]
+py-version = "3.14"
+source-roots = ["src"]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.messages_control]
+disable = [
+  "import-error", # Databricks provides PySpark in the runtime; local installs stay lightweight.
+  "too-few-public-methods",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", ".databricks", ".bundle"]

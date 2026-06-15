@@ -1,0 +1,47 @@
+---
+# Pre-commit hooks configuration
+# Install: pre-commit install
+# Update: pre-commit autoupdate
+# Run manually: pre-commit run --all-files
+repos:
+  - repo: local
+    hooks:
+      - id: compile-python
+        name: Compile Python files
+        entry: python -m compileall -q src notebooks tests
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: end-of-file-fixer
+        name: Check files end with newline
+        entry: python -c "import pathlib, subprocess, sys; files=subprocess.check_output(['git','ls-files'], text=True).splitlines(); bad=[p for p in files if pathlib.Path(p).is_file() and not pathlib.Path(p).read_bytes().endswith(b'\n')]; print('\n'.join(bad)); sys.exit(bool(bad))"
+        language: system
+        pass_filenames: false
+      - id: trailing-whitespace
+        name: Check trailing whitespace
+        entry: python -c "import pathlib, subprocess, sys; files=subprocess.check_output(['git','ls-files'], text=True).splitlines(); bad=[p for p in files if pathlib.Path(p).is_file() and any(line.rstrip(b'\n\r').endswith((b' ', b'\t')) for line in pathlib.Path(p).read_bytes().splitlines(True))]; print('\n'.join(bad)); sys.exit(bool(bad))"
+        language: system
+        pass_filenames: false
+      - id: black
+        name: Format Python with black
+        entry: black
+        language: system
+        args: ["--line-length=120"]
+        types: [python]
+      - id: isort
+        name: Sort Python imports
+        entry: isort
+        language: system
+        args: ["--profile=black", "--line-length=120"]
+        types: [python]
+      - id: ruff
+        name: Lint Python with ruff
+        entry: ruff check
+        language: system
+        types: [python]
+      - id: bandit
+        name: Scan Python security with bandit
+        entry: bandit
+        language: system
+        args: ["-ll"]
+        files: ^(src|notebooks)/.*\.py$

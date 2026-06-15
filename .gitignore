@@ -1,0 +1,17 @@
+.databricks/
+.bundle/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.DS_Store
+data/raw/
+data/bronze/
+data/silver/
+data/gold/
+tmp/
+*.log

@@ -1,0 +1,175 @@
+# Virtue Foundation Hackathon 2026
+
+This is a Databricks Asset Bundle starter for the DAIS 2026 hackathon. It enriches India healthcare facility analysis with public postal geography and district-level public health indicators.
+
+## Team and Challenge
+
+Team:
+
+- [Vibhu Ganesan](https://www.linkedin.com/in/vibhu-g-83313723)
+- [Devesh Padmanabhan](https://www.linkedin.com/in/deveshpa/)
+
+Hackathon problem track: Problem 4, Data Readiness Desk: what must be fixed before planning can trust it?
+
+Our focus is to make uncertain healthcare geography and public-health indicators reviewable before downstream planning or agentic recommendations depend on them.
+
+## Table of Contents
+
+- [Virtue Foundation Hackathon 2026](#virtue-foundation-hackathon-2026)
+  - [Team and Challenge](#team-and-challenge)
+  - [Table of Contents](#table-of-contents)
+  - [What This Builds](#what-this-builds)
+  - [Data Sources](#data-sources)
+  - [Project Layout](#project-layout)
+  - [Setup](#setup)
+  - [Run the Pipeline](#run-the-pipeline)
+  - [Outputs](#outputs)
+  - [Data Quality Position](#data-quality-position)
+  - [Agentic Demo Ideas](#agentic-demo-ideas)
+  - [Ignored Files Policy](#ignored-files-policy)
+  - [Convert This Folder to a Git Repo](#convert-this-folder-to-a-git-repo)
+
+## What This Builds
+
+The pipeline ingests two CSV files from a Unity Catalog Volume, applies bronze/silver/gold medallion layers, and publishes demo-ready Delta tables.
+
+```mermaid
+flowchart LR
+  SourceVolume["UC Volume CSV Files"] --> Bronze["Bronze: Raw CSV Delta Tables"]
+  Bronze --> SilverPincode["Silver: Clean PIN Offices and PIN Lookup"]
+  Bronze --> SilverNfhs["Silver: Clean NFHS District Indicators"]
+  SilverPincode --> GoldEnrichment["Gold: PIN Health Enrichment"]
+  SilverNfhs --> GoldDistrict["Gold: District Health Context"]
+  GoldDistrict --> Demo["Demo Queries and Agent Prompts"]
+  GoldEnrichment --> Demo
+```
+
+## Data Sources
+
+- India Post PIN Code Directory: `india_post_pincode_directory.csv`
+- NFHS-5 District Health Indicators: `nfhs5_district_health_indicators.csv`
+
+Both datasets are public-sector datasets published through data.gov.in under the Government Open Data License - India. See [Data Dictionary](docs/data_dictionary.md) for expected columns and semantics.
+
+## Project Layout
+
+- [databricks.yml](databricks.yml): Databricks Asset Bundle job and variables
+- [notebooks/01_ingest_bronze.py](notebooks/01_ingest_bronze.py): CSV ingestion from Unity Catalog Volume
+- [notebooks/02_build_silver.py](notebooks/02_build_silver.py): cleanup, geography normalization, and quality flags
+- [notebooks/03_build_gold.py](notebooks/03_build_gold.py): enrichment-ready gold outputs
+- [notebooks/04_demo_queries.py](notebooks/04_demo_queries.py): demo queries and an agent prompt
+- [src/hackathon_2026](src/hackathon_2026): reusable helpers with local tests
+- [docs](docs): architecture, data quality, and demo narrative
+- [tests](tests): local tests for pure Python normalization helpers
+
+## Setup
+
+1. Create or choose a Unity Catalog catalog and schema for the hackathon, for example `hackathon.virtue_foundation`.
+1. Create a UC Volume directory for source files, for example `/Volumes/hackathon/virtue_foundation/raw`.
+1. Upload the two source CSV files into that directory:
+   - `/Volumes/hackathon/virtue_foundation/raw/india_post_pincode_directory.csv`
+   - `/Volumes/hackathon/virtue_foundation/raw/nfhs5_district_health_indicators.csv`
+1. Confirm the Databricks CLI is authenticated:
+
+```bash
+databricks auth profiles
+```
+
+1. Validate the bundle from this directory:
+
+```bash
+databricks bundle validate --target dev
+```
+
+> [!NOTE]
+> The default variables assume `catalog=hackathon`, `schema=virtue_foundation`, and `source_volume_path=/Volumes/hackathon/virtue_foundation/raw`. Override these with bundle variables if your workspace uses different names.
+
+> [!NOTE]
+> This project intentionally uses [databricks.yml](databricks.yml) because it is the standard Databricks Asset Bundle entrypoint. Other YAML files use the `.yaml` extension.
+
+## Run the Pipeline
+
+Deploy and run the Databricks job:
+
+```bash
+databricks bundle deploy --target dev
+databricks bundle run virtue_foundation_pipeline --target dev
+```
+
+Override variables if needed:
+
+```bash
+databricks bundle run virtue_foundation_pipeline --target dev --var catalog=my_catalog --var schema=my_schema --var source_volume_path=/Volumes/my_catalog/my_schema/raw
+```
+
+You can also run the notebooks manually in Databricks in this order:
+
+1. [notebooks/01_ingest_bronze.py](notebooks/01_ingest_bronze.py)
+1. [notebooks/02_build_silver.py](notebooks/02_build_silver.py)
+1. [notebooks/03_build_gold.py](notebooks/03_build_gold.py)
+1. [notebooks/04_demo_queries.py](notebooks/04_demo_queries.py)
+
+## Outputs
+
+Bronze tables:
+
+- `bronze_india_post_pincode_directory`
+- `bronze_nfhs5_district_health_indicators`
+
+Silver tables:
+
+- `silver_pincode_post_offices`
+- `silver_pincode_lookup`
+- `silver_nfhs_indicator_quality_long`
+- `silver_nfhs5_district_health_indicators`
+- `pipeline_quality_checks`
+
+Gold tables:
+
+- `gold_district_health_context`
+- `gold_pincode_health_enrichment`
+- `gold_underserved_district_candidates`
+
+## Data Quality Position
+
+This project does not pretend that postal geography is exact. The PIN code directory row grain is post office, not PIN code, so the silver layer creates a join-safe PIN lookup and flags ambiguous PIN geography before any health enrichment.
+
+NFHS `*` values are treated as unavailable, not zero. Parenthesized values such as `(29.5)` are parsed as numeric values and flagged as low-sample estimates.
+
+See [Data Quality Decisions](docs/data_quality.md) for the detailed handling rules.
+
+## Agentic Demo Ideas
+
+The final notebook prints an agent prompt that can be used with a Databricks assistant or an app-layer agent. Good demo tasks:
+
+- Explain which districts deserve deeper healthcare access review and why.
+- Identify ambiguous PIN codes that should not be joined directly to facility records.
+- Generate validation questions for facilities whose postal district conflicts with coordinate-derived district.
+- Summarize data quality cautions for a selected state.
+
+See [Demo Script](docs/demo_script.md) for a judge-friendly walkthrough.
+
+## Ignored Files Policy
+
+The [.gitignore](.gitignore) is intentionally scoped to keep the repository shareable with event organizers while avoiding generated state, local environments, and raw data artifacts.
+
+- Databricks-generated state is ignored: `.databricks/` and `.bundle/`.
+- Local Python tooling state is ignored: `.venv/`, `__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, `*.py[cod]`, and `*.egg-info/`.
+- Build outputs are ignored: `dist/` and `build/`.
+- Local data zones are ignored: `data/raw/`, `data/bronze/`, `data/silver/`, and `data/gold/`. Source datasets should be stored in Unity Catalog Volumes or documented public sources, not committed.
+- Scratch and machine-local files are ignored: `tmp/`, `*.log`, and `.DS_Store`.
+
+If a future demo needs small sample data, add a curated, license-safe fixture under `tests/fixtures/` instead of committing raw operational data.
+
+## Convert This Folder to a Git Repo
+
+When you are ready to make this standalone:
+
+```bash
+cd /Users/dpadmanabhan/code/labs/data/databricks/dais-2026-data-readiness-desk
+git init
+git add .
+git status
+```
+
+Before the first commit, review [pyproject.toml](pyproject.toml), [databricks.yml](databricks.yml), and [.gitignore](.gitignore) for your final workspace names and team conventions.

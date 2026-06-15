@@ -1,0 +1,86 @@
+bundle:
+  name: virtue-foundation-hackathon-2026
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for hackathon tables.
+    default: hackathon
+  schema:
+    description: Unity Catalog schema for bronze, silver, and gold tables.
+    default: virtue_foundation
+  source_volume_path:
+    description: UC Volume directory containing the source CSV files.
+    default: /Volumes/${var.catalog}/${var.schema}/raw
+  pincode_file:
+    description: India Post PIN code directory CSV filename.
+    default: india_post_pincode_directory.csv
+  nfhs_file:
+    description: NFHS-5 district health indicators CSV filename.
+    default: nfhs5_district_health_indicators.csv
+
+resources:
+  jobs:
+    virtue_foundation_pipeline:
+      name: virtue-foundation-hackathon-2026-${bundle.target}
+      tasks:
+        - task_key: ingest_bronze
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: ./notebooks/01_ingest_bronze.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              source_volume_path: ${var.source_volume_path}
+              pincode_file: ${var.pincode_file}
+              nfhs_file: ${var.nfhs_file}
+        - task_key: build_silver
+          depends_on:
+            - task_key: ingest_bronze
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: ./notebooks/02_build_silver.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+        - task_key: build_gold
+          depends_on:
+            - task_key: build_silver
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: ./notebooks/03_build_gold.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+        - task_key: demo_queries
+          depends_on:
+            - task_key: build_gold
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: ./notebooks/04_demo_queries.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+      job_clusters:
+        - job_cluster_key: default_cluster
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: i3.xlarge
+            autoscale:
+              min_workers: 1
+              max_workers: 2
+            data_security_mode: SINGLE_USER
+            autotermination_minutes: 30
+            custom_tags:
+              project: virtue-foundation-hackathon-2026
+              environment: ${bundle.target}
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
