@@ -5,7 +5,7 @@ This runbook is the single source of truth for setting up, building, validating,
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Data Landing Files](#data-landing-files)
+- [Source Files](#source-files)
 - [Governance Notes](#governance-notes)
 - [Phase 0 - Local Setup](#phase-0---local-setup)
 - [Phase 1 - Provision Unity Catalog](#phase-1---provision-unity-catalog)
@@ -27,9 +27,9 @@ This runbook is the single source of truth for setting up, building, validating,
 - Permission to create or write tables in the chosen catalog and schema.
 - Source CSV files uploaded to a Unity Catalog Volume.
 
-## Data Landing Files
+## Source Files
 
-Vibhu will upload source files under [data](../data/). Expected filenames:
+Source files are tracked or staged under [data](../data/) before they are copied into a Unity Catalog Volume. Expected filenames:
 
 - `facilities.xlsx`
 - `india_post_pincode_directory.csv`
@@ -37,7 +37,7 @@ Vibhu will upload source files under [data](../data/). Expected filenames:
 - `srs_2020_state.csv`
 - `india_districts.geojson`
 
-Upload these files to `/Volumes/drd/bronze/files/` or the configured source volume before running the bronze notebook. NFHS-5 may be referenced as a provided Databricks table instead of a local file.
+Copy these files to `/Volumes/drd/bronze/files/` or the configured source volume before running the bronze notebook. NFHS-5 may be referenced as a provided Databricks table instead of a local file.
 
 Current HMIS caveat: `hmis_2019_20_slice.csv` is present locally, but the inspected file is state-grain (`State`, `S.No.`, `Parameters`, `Type`, monthly value columns) and uses `cp1252` encoding. District-level disease reconciliation still needs either a district-grain HMIS extract or an explicit state-grain fallback story.
 

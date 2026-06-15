@@ -1,10 +1,10 @@
-# Data Landing Folder
+# Data Folder
 
-Vibhu will upload local hackathon data files here before the Databricks ingest step.
+This folder holds local hackathon source files before they are copied into a Unity Catalog Volume for Databricks ingest.
 
-## Expected Files
+## Source Files
 
-Place these files directly under `data/`:
+Expected filenames:
 
 - `Facilities.xlsx`
 - `india_post_pincode_directory.csv`
@@ -14,13 +14,9 @@ Place these files directly under `data/`:
 
 NFHS-5 district health indicators may be available as a Databricks table instead of a local file. If a local CSV is used, document its filename in [docs/runbook.md](../docs/runbook.md) before ingesting it.
 
-## Current Upload Status
+## HMIS Observations
 
-Currently present:
-
-- `hmis_2019_20_slice.csv`
-
-Current HMIS observations:
+The inspected `hmis_2019_20_slice.csv` file has these characteristics:
 
 - Encoding: `cp1252`
 - Shape: 20,368 rows and 69 columns

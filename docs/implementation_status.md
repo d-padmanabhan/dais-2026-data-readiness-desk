@@ -24,14 +24,14 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 
 ## Scaffolded
 
-- [data](../data/) landing folder for Vibhu's uploaded files.
+- [data](../data/) source file folder and ingest guidance.
 - [app](../app/) Streamlit Databricks App shell that reads cached gold outputs only.
 - [config/scoring.yaml](../config/scoring.yaml) with score thresholds and quota-safety defaults.
 
 ## Remaining Build Work
 
 - Ingest `Facilities.xlsx`, SRS, and `india_districts.geojson`.
-- Decide whether the current state-grain HMIS file is sufficient as a fallback or whether Vibhu will upload a district-grain HMIS extract.
+- Decide whether the current state-grain HMIS file is sufficient as a fallback or whether the disease lens needs a district-grain HMIS extract from another source.
 - Add point-in-polygon facility district assignment.
 - Normalize HMIS denominators and publish comparable district rates.
 - Build `gold_facility_verdicts`, `gold_district_verdicts`, and `gold_fix_ranking`.
