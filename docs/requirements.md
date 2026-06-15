@@ -45,7 +45,7 @@ The app answers *"can I act on this number,"* not *"is this district healthy."* 
 
 | Source | Grain | Load state | Role |
 |--------|-------|-----------|------|
-| Virtue Foundation facilities | point | **file** (Facilities.xlsx, 100 rows) | facility lens + location lens inputs |
+| Virtue Foundation facilities | point | **shared Databricks table** (`databricks_virtue_foundation_dataset_dais_2026.virtue_foundation_dataset.facilities`) | facility lens + location lens inputs |
 | India Post PIN directory | PIN/post-office | file (data.gov.in) | location corroboration |
 | District boundary polygons | district | file (geoBoundaries/DataMeet) | point-in-polygon -> district |
 | NFHS-5 district indicators | district | **table** (provided) | disease lens (survey side) |

@@ -8,11 +8,11 @@
 #
 # Dependencies        : databricks, jq
 #
-# Script Usage        : ./scripts/bootstrap_databricks_workspace.sh --warehouse-id <id>
+# Script Usage        : ./scripts/bootstrap_databricks_workspace.sh [--warehouse-id <id>]
 #
 # Examples            : ./scripts/bootstrap_databricks_workspace.sh --warehouse-id 4e307d33a4466b55
-#                       ./scripts/bootstrap_databricks_workspace.sh --warehouse-id 4e307d33a4466b55 --require-all-files
-#                       ./scripts/bootstrap_databricks_workspace.sh --warehouse-id 4e307d33a4466b55 --catalog data_readiness_desk
+#                       DATABRICKS_WAREHOUSE_ID=4e307d33a4466b55 ./scripts/bootstrap_databricks_workspace.sh --require-all-files
+#                       ./scripts/bootstrap_databricks_workspace.sh --warehouse-id 4e307d33a4466b55 --catalog data_readiness_desk --schema pipeline
 #
 ##----------------------------------------------------------------------------------------##
 # Turn debug on or off
@@ -26,24 +26,21 @@ readonly SCRIPT_DIR
 GIT_REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly GIT_REPO_ROOT
 readonly DEFAULT_CATALOG="data_readiness_desk"
-readonly DEFAULT_BRONZE_SCHEMA="bronze"
-readonly DEFAULT_SILVER_SCHEMA="silver"
-readonly DEFAULT_GOLD_SCHEMA="gold"
+readonly DEFAULT_TABLE_SCHEMA="pipeline"
+readonly DEFAULT_VOLUME_SCHEMA="bronze"
 readonly DEFAULT_VOLUME="files"
 readonly DEFAULT_DATA_DIR="${GIT_REPO_ROOT}/data"
 readonly SOURCE_FILES=(
   "hmis_2019_20_slice.csv"
-  "Facilities.xlsx"
   "srs_2020_state.csv"
   "india_post_pincode_directory.csv"
   "india_districts.geojson"
 )
 
-warehouse_id=""
+warehouse_id="${DATABRICKS_WAREHOUSE_ID:-}"
 catalog="${DEFAULT_CATALOG}"
-bronze_schema="${DEFAULT_BRONZE_SCHEMA}"
-silver_schema="${DEFAULT_SILVER_SCHEMA}"
-gold_schema="${DEFAULT_GOLD_SCHEMA}"
+table_schema="${DEFAULT_TABLE_SCHEMA}"
+volume_schema="${DEFAULT_VOLUME_SCHEMA}"
 volume="${DEFAULT_VOLUME}"
 data_dir="${DEFAULT_DATA_DIR}"
 require_all_files="0"
@@ -67,14 +64,13 @@ require_command() {
 show_help() {
   cat << 'EOF'
 Usage:
-  bootstrap_databricks_workspace.sh --warehouse-id <warehouse-id> [options]
+  bootstrap_databricks_workspace.sh [--warehouse-id <warehouse-id>] [options]
 
 Options:
-  --warehouse-id <id>      Required SQL Warehouse ID used to execute setup SQL
+  --warehouse-id <id>      SQL Warehouse ID used to execute setup SQL
   --catalog <name>         Unity Catalog catalog name (default: data_readiness_desk)
-  --bronze-schema <name>   Bronze schema name (default: bronze)
-  --silver-schema <name>   Silver schema name (default: silver)
-  --gold-schema <name>     Gold schema name (default: gold)
+  --schema <name>          Table schema used by the bundle (default: pipeline)
+  --volume-schema <name>   Schema containing the source-file Volume (default: bronze)
   --volume <name>          Source-file Volume name (default: files)
   --data-dir <path>        Local source file directory (default: ./data)
   --require-all-files      Fail if any expected source file is missing
@@ -84,6 +80,7 @@ Environment:
   DATABRICKS_HOST
   DATABRICKS_CLIENT_ID
   DATABRICKS_CLIENT_SECRET
+  DATABRICKS_WAREHOUSE_ID
 EOF
 }
 
@@ -100,19 +97,14 @@ parse_args() {
         catalog="$2"
         shift 2
         ;;
-      --bronze-schema)
-        [[ $# -ge 2 ]] || die "--bronze-schema requires a value"
-        bronze_schema="$2"
+      --schema)
+        [[ $# -ge 2 ]] || die "--schema requires a value"
+        table_schema="$2"
         shift 2
         ;;
-      --silver-schema)
-        [[ $# -ge 2 ]] || die "--silver-schema requires a value"
-        silver_schema="$2"
-        shift 2
-        ;;
-      --gold-schema)
-        [[ $# -ge 2 ]] || die "--gold-schema requires a value"
-        gold_schema="$2"
+      --volume-schema | --bronze-schema)
+        [[ $# -ge 2 ]] || die "$1 requires a value"
+        volume_schema="$2"
         shift 2
         ;;
       --volume)
@@ -139,7 +131,7 @@ parse_args() {
     esac
   done
 
-  [[ -n "${warehouse_id}" ]] || die "--warehouse-id is required"
+  [[ -n "${warehouse_id}" ]] || die "--warehouse-id or DATABRICKS_WAREHOUSE_ID is required"
 }
 
 validate_databricks_auth() {
@@ -148,7 +140,7 @@ validate_databricks_auth() {
 }
 
 volume_path() {
-  printf "/Volumes/%s/%s/%s" "${catalog}" "${bronze_schema}" "${volume}"
+  printf "/Volumes/%s/%s/%s" "${catalog}" "${volume_schema}" "${volume}"
 }
 
 execute_sql_statement() {
@@ -173,10 +165,9 @@ execute_sql_statement() {
 
 create_unity_catalog_objects() {
   execute_sql_statement "CREATE CATALOG IF NOT EXISTS ${catalog}"
-  execute_sql_statement "CREATE SCHEMA IF NOT EXISTS ${catalog}.${bronze_schema}"
-  execute_sql_statement "CREATE SCHEMA IF NOT EXISTS ${catalog}.${silver_schema}"
-  execute_sql_statement "CREATE SCHEMA IF NOT EXISTS ${catalog}.${gold_schema}"
-  execute_sql_statement "CREATE VOLUME IF NOT EXISTS ${catalog}.${bronze_schema}.${volume}"
+  execute_sql_statement "CREATE SCHEMA IF NOT EXISTS ${catalog}.${table_schema}"
+  execute_sql_statement "CREATE SCHEMA IF NOT EXISTS ${catalog}.${volume_schema}"
+  execute_sql_statement "CREATE VOLUME IF NOT EXISTS ${catalog}.${volume_schema}.${volume}"
 }
 
 upload_source_files() {

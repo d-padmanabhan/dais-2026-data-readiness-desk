@@ -16,7 +16,7 @@ These diagrams are version-controlled Mermaid diagrams so they render in GitHub 
 ```mermaid
 flowchart LR
   subgraph source [Source Files And Tables]
-    FacilitiesFile["Facilities.xlsx"]
+    FacilitiesTable["Shared Facilities Table"]
     PincodeCsv["India Post PIN Code CSV"]
     BoundaryGeojson["District Boundaries GeoJSON"]
     NfhsCsv["NFHS-5 District CSV"]

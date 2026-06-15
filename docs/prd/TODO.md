@@ -42,7 +42,7 @@
   - [x] Upload `india_districts.geojson`.
   - [ ] Build point-in-polygon assignment.
   - [x] Publish first-pass `silver_facilities_geo`.
-  - [ ] Publish `gold_facility_verdicts`.
+  - [x] Publish first-pass `gold_facility_verdicts`.
 
 - [ ] Build disease lens.
   - [x] Publish state-grain HMIS fallback summary for demo.

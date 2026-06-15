@@ -33,11 +33,11 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 
 ## Remaining Build Work
 
-- Ingest `Facilities.xlsx`, SRS, and `india_districts.geojson`.
+- Ingest SRS and `india_districts.geojson`; facilities are read from the shared Databricks table.
 - Decide whether the current state-grain HMIS file is sufficient as a fallback or whether the disease lens needs a district-grain HMIS extract from another source.
 - Add point-in-polygon facility district assignment.
 - Normalize HMIS denominators and publish comparable district rates.
-- Build `gold_facility_verdicts`, `gold_district_verdicts`, and `gold_fix_ranking`.
+- Build `gold_district_verdicts` and `gold_fix_ranking`.
 - Add `ai_extract` for facility capability fields.
 - Train AutoML once or publish a static fallback `gold_coverage_predictions` table.
 - Wire the Free Databricks App to real cached gold tables.

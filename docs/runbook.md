@@ -78,25 +78,43 @@ databricks bundle validate --target dev
 
 ## Phase 1 - Provision Unity Catalog
 
-Use the bootstrap script to create the catalog, schemas, upload Volume, and upload any available local files:
+Use the bootstrap script to create the catalog, table schema, upload Volume, and upload any available local files:
 
 ```bash
 ./scripts/bootstrap_databricks_workspace.sh --warehouse-id <warehouse-id>
 ```
 
-For the current workspace, the known starter warehouse is:
+If `DATABRICKS_WAREHOUSE_ID` is already set in your shell, the script can read it from the environment:
 
 ```bash
-./scripts/bootstrap_databricks_workspace.sh --warehouse-id 4e307d33a4466b55
+set -a
+source "/Users/dpadmanabhan/code/labs/tmp/.env"
+set +a
+
+./scripts/bootstrap_databricks_workspace.sh \
+  --catalog data_readiness_desk \
+  --schema pipeline \
+  --volume-schema bronze \
+  --volume files
+```
+
+For the current workspace, the explicit warehouse form is:
+
+```bash
+./scripts/bootstrap_databricks_workspace.sh \
+  --warehouse-id 4e307d33a4466b55 \
+  --catalog data_readiness_desk \
+  --schema pipeline \
+  --volume-schema bronze \
+  --volume files
 ```
 
 The script runs the following SQL:
 
 ```sql
 CREATE CATALOG IF NOT EXISTS data_readiness_desk;
+CREATE SCHEMA IF NOT EXISTS data_readiness_desk.pipeline;
 CREATE SCHEMA IF NOT EXISTS data_readiness_desk.bronze;
-CREATE SCHEMA IF NOT EXISTS data_readiness_desk.silver;
-CREATE SCHEMA IF NOT EXISTS data_readiness_desk.gold;
 CREATE VOLUME IF NOT EXISTS data_readiness_desk.bronze.files;
 ```
 
