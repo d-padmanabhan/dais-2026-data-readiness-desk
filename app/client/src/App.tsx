@@ -21,6 +21,7 @@ type ApiSummary =
 type FacilityMatch = {
   band: "amber" | "green" | "red";
   binding_reason: string;
+  care_substance_missing_count: string;
   data_caution: string;
   has_capability_text: string;
   has_pincode: string;
@@ -74,6 +75,7 @@ function toFacilityRows(result: QueryResult): FacilityMatch[] {
   return rowsToObjects(result).map((row) => ({
     band: row.band === "green" || row.band === "amber" || row.band === "red" ? row.band : "red",
     binding_reason: row.binding_reason ?? "Location: facility has not been assigned to a trusted geography yet",
+    care_substance_missing_count: row.care_substance_missing_count ?? "0",
     data_caution: row.data_caution ?? "state_rollup_before_district_polygon_assignment",
     has_capability_text: row.has_capability_text ?? "false",
     has_pincode: row.has_pincode ?? "false",
@@ -129,21 +131,26 @@ export function App(): ReactElement {
     .slice(0, 20);
   const selectedFacility =
     facilities.find((facility) => facility.unique_id === selectedFacilityId) ?? filteredFacilities[0] ?? facilities[0];
-  const baseScore = selectedFacility ? Math.round(Number(selectedFacility.numeric_score) * 100) : 72;
+  const baseScore = selectedFacility ? Math.round(Number(selectedFacility.numeric_score) * 100) : 0;
   const displayedScore = simulated && TOP_FIX ? clamp(baseScore + TOP_FIX.lift, 0, 100) : baseScore;
   const selectedBand = displayedScore >= 85 ? "green" : displayedScore >= 60 ? "amber" : "red";
   const latitude = Number(selectedFacility?.latitude);
   const longitude = Number(selectedFacility?.longitude);
-  const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+  const hasCoordinates =
+    Boolean(selectedFacility?.latitude) &&
+    Boolean(selectedFacility?.longitude) &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude);
   const markerLeft = hasCoordinates ? clamp(((longitude - 68) / 30) * 100, 5, 95) : 50;
   const markerTop = hasCoordinates ? clamp(((37 - latitude) / 31) * 100, 5, 95) : 50;
+  const readinessTitle = selectedFacility?.name ?? "Select a facility";
 
   return (
     <main className="shell">
       <section className="hero">
-        <div>
-          <p className="brand">de<span>deviltails</span></p>
-          <p className="lede">Corroborate NFHS-5 and facilities data using other quality sources</p>
+        <div className="brand-block">
+          <p className="brand">Data Readiness Desk</p>
+          <p className="lede">Decision-grade trust signals for healthcare facility and public-health data.</p>
         </div>
         <label className="question">
           <span>How trustworthy is the data for</span>
@@ -179,13 +186,30 @@ export function App(): ReactElement {
           <p className="eyebrow">Readiness Score</p>
           <p className={`score score-${selectedBand}`}>{displayedScore}%</p>
           {simulated ? <p className="delta">+{displayedScore - baseScore} points after simulated fix</p> : null}
+          <h2>{readinessTitle}</h2>
           <p className="reason">
             {selectedFacility?.binding_reason ??
               "State-grain health data is available, but facility-level reconciliation is still incomplete."}
           </p>
+          <dl className="signal-list">
+            <div>
+              <dt>PIN code</dt>
+              <dd>{selectedFacility?.pincode || "Missing"}</dd>
+            </div>
+            <div>
+              <dt>Capability text</dt>
+              <dd>{selectedFacility?.has_capability_text === "true" ? "Present" : "Missing"}</dd>
+            </div>
+            <div>
+              <dt>Pending issue</dt>
+              <dd>{selectedFacility?.data_caution ?? "state-grain fallback"}</dd>
+            </div>
+          </dl>
           <div className="map-panel" aria-label="Facility coordinate preview">
             <div className="map-grid" />
-            <div className={`map-marker marker-${selectedBand}`} style={{ left: `${markerLeft}%`, top: `${markerTop}%` }} />
+            {hasCoordinates ? (
+              <div className={`map-marker marker-${selectedBand}`} style={{ left: `${markerLeft}%`, top: `${markerTop}%` }} />
+            ) : null}
             <div className="map-caption">
               {hasCoordinates
                 ? `${selectedFacility?.source_state_name ?? "Unknown"} (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`
@@ -204,11 +228,15 @@ export function App(): ReactElement {
               }}
               value={selectedFacility?.unique_id ?? ""}
             >
-              {filteredFacilities.map((facility) => (
-                <option key={facility.unique_id} value={facility.unique_id}>
-                  {facility.name} - {facility.source_state_name}
-                </option>
-              ))}
+              {filteredFacilities.length > 0 ? (
+                filteredFacilities.map((facility) => (
+                  <option key={facility.unique_id} value={facility.unique_id}>
+                    {facility.name} - {facility.source_state_name}
+                  </option>
+                ))
+              ) : (
+                <option value="">No facility match found</option>
+              )}
             </select>
           </label>
 
@@ -231,7 +259,7 @@ export function App(): ReactElement {
       </section>
 
       <section className="data-section">
-        <article className="card">
+        <article className="card evidence-card">
           <h2>Cached HMIS State Summary</h2>
           {summary?.status === "unavailable" ? <p>{summary.message}</p> : null}
           {hmisRows.length > 0 ? (
@@ -260,7 +288,7 @@ export function App(): ReactElement {
           )}
         </article>
 
-        <article className="card">
+        <article className="card evidence-card">
           <h2>Lowest Facility Trust Scores</h2>
           {facilityRows.length > 0 ? (
             <table>
@@ -278,7 +306,9 @@ export function App(): ReactElement {
                   <tr key={row.source_state_name}>
                     <td>{row.source_state_name}</td>
                     <td>{row.total_facilities}</td>
-                    <td>{row.valid_coordinate_facilities}</td>
+                    <td>
+                      {row.valid_coordinate_facilities} / {row.total_facilities}
+                    </td>
                     <td>{row.band}</td>
                     <td>{row.binding_reason}</td>
                   </tr>

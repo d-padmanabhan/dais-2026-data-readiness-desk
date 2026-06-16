@@ -123,6 +123,8 @@ async function buildReadinessSummary() {
         binding_reason,
         data_caution
       FROM data_readiness_desk.pipeline.gold_facility_verdicts
+      WHERE source_state_name IS NOT NULL
+        AND source_state_name RLIKE '[A-Za-z]'
       ORDER BY numeric_score ASC
       LIMIT 8
     `),
@@ -138,16 +140,49 @@ async function buildReadinessSummary() {
         f.has_valid_coordinates,
         f.has_pincode,
         f.has_capability_text,
-        COALESCE(v.numeric_score, 0.0) AS numeric_score,
-        COALESCE(v.band, 'red') AS band,
-        COALESCE(v.binding_reason, 'Location: facility has not been assigned to a trusted geography yet') AS binding_reason,
+        f.care_substance_missing_count,
+        ROUND(
+          LEAST(
+            1.0,
+            (CASE WHEN f.has_valid_coordinates THEN 0.45 ELSE 0.0 END)
+              + (CASE WHEN f.has_pincode THEN 0.20 ELSE 0.0 END)
+              + (CASE WHEN f.has_capability_text THEN 0.20 ELSE 0.0 END)
+              + (COALESCE(v.numeric_score, 0.0) * 0.15)
+          ),
+          2
+        ) AS numeric_score,
+        CASE
+          WHEN (
+            (CASE WHEN f.has_valid_coordinates THEN 0.45 ELSE 0.0 END)
+              + (CASE WHEN f.has_pincode THEN 0.20 ELSE 0.0 END)
+              + (CASE WHEN f.has_capability_text THEN 0.20 ELSE 0.0 END)
+              + (COALESCE(v.numeric_score, 0.0) * 0.15)
+          ) >= 0.85 THEN 'green'
+          WHEN (
+            (CASE WHEN f.has_valid_coordinates THEN 0.45 ELSE 0.0 END)
+              + (CASE WHEN f.has_pincode THEN 0.20 ELSE 0.0 END)
+              + (CASE WHEN f.has_capability_text THEN 0.20 ELSE 0.0 END)
+              + (COALESCE(v.numeric_score, 0.0) * 0.15)
+          ) >= 0.60 THEN 'amber'
+          ELSE 'red'
+        END AS band,
+        CASE
+          WHEN NOT f.has_valid_coordinates THEN 'Location: missing or invalid facility coordinates constrain trust'
+          WHEN NOT f.has_pincode THEN 'Location: missing PIN code constrains geography reconciliation'
+          WHEN NOT f.has_capability_text THEN 'Completeness: missing capability text constrains facility profiling'
+          ELSE 'Facility profile is usable, but district polygon assignment is still pending'
+        END AS binding_reason,
         COALESCE(v.data_caution, 'state_rollup_before_district_polygon_assignment') AS data_caution
       FROM data_readiness_desk.pipeline.silver_facilities_geo f
       LEFT JOIN data_readiness_desk.pipeline.gold_facility_verdicts v
         ON f.source_state_normalized = v.source_state_normalized
       WHERE f.name IS NOT NULL
-      ORDER BY f.name
-      LIMIT 500
+        AND f.source_state_name IS NOT NULL
+        AND f.source_state_name RLIKE '[A-Za-z]'
+      ORDER BY
+        CASE WHEN lower(f.name) LIKE '%aravind%' THEN 0 ELSE 1 END,
+        f.name
+      LIMIT 800
     `),
   ]);
 
