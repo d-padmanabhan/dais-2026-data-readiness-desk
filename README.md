@@ -184,7 +184,7 @@ Current dev deployment:
 
 - App name: `data-readiness-desk`
 - URL: [Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
-- Active deployment: `01f16943107312faa8f01bf3ea6aa620`
+- Active deployment: `01f16980981616d5b1138b5269de14f1`
 
 ## Outputs
 
