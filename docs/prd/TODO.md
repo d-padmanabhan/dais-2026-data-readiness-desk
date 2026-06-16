@@ -79,7 +79,7 @@
   - [ ] Add ranked fixes.
   - [ ] Add before/after toggle from cached rows.
   - [x] Enforce read-only, gold-only queries for current API.
-  - [ ] Confirm the app runs as a Free Databricks App, not externally hosted web app.
+  - [x] Confirm the app runs as a Free Databricks App, not externally hosted web app.
 
 ## Demo Prep
 
@@ -106,6 +106,6 @@
 - [ ] All local tests pass.
 - [ ] Bundle validates.
 - [x] Demo app deploys.
-- [ ] At least one end-to-end cached verdict works.
-- [ ] Uncertainty is visible in the UI.
+- [x] At least one end-to-end cached verdict works.
+- [x] Uncertainty is visible in the UI.
 - [ ] README and runbook match the actual demo path.

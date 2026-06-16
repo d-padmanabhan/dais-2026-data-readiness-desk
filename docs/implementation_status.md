@@ -43,7 +43,7 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 - Build `gold_district_verdicts` and `gold_fix_ranking`.
 - Add `ai_extract` for facility capability fields.
 - Train AutoML once or publish a static fallback `gold_coverage_predictions` table.
-- Wire the Free Databricks App to real cached gold tables.
+- Wire the Free Databricks App verdict card to selected cached output rows.
 - Add before/after fix rows for the live demo.
 
 ## Protect-First Demo Path
