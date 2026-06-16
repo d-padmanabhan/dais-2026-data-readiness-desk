@@ -5,8 +5,7 @@
 - [x] Create or confirm the Unity Catalog structure.
   - [x] `data_readiness_desk`
   - [x] `data_readiness_desk.bronze`
-  - [x] `data_readiness_desk.silver`
-  - [x] `data_readiness_desk.gold`
+  - [x] `data_readiness_desk.pipeline`
   - [x] `/Volumes/data_readiness_desk/bronze/files/`
 
 - [ ] Upload or copy source files into the Volume.

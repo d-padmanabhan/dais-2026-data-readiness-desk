@@ -1,5 +1,5 @@
 bundle:
-  name: virtue-foundation-hackathon-2026
+  name: dais-2026-data-readiness-desk
 
 variables:
   catalog:
@@ -33,7 +33,7 @@ variables:
 resources:
   jobs:
     virtue_foundation_pipeline:
-      name: virtue-foundation-hackathon-2026-${bundle.target}
+      name: dais-2026-data-readiness-desk-${bundle.target}
       tags:
         cost_center: hackathon
         data_sensitivity: public

@@ -25,6 +25,7 @@ readonly DEFAULT_SCHEMA="pipeline"
 readonly DEFAULT_LIMIT="5"
 readonly DEFAULT_TABLES=(
   "gold_hmis_state_indicator_summary"
+  "gold_facility_verdicts"
   "silver_facilities_geo"
   "pipeline_quality_checks"
 )

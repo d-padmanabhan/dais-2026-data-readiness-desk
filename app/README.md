@@ -6,10 +6,10 @@ The app must read cached gold outputs only. It should not train models, call AI 
 
 ## Expected Gold Tables
 
-- `data_readiness_desk.gold.facility_verdicts`
-- `data_readiness_desk.gold.district_verdicts`
-- `data_readiness_desk.gold.fix_ranking`
-- `data_readiness_desk.gold.coverage_predictions`
+- `data_readiness_desk.pipeline.gold_facility_verdicts`
+- `data_readiness_desk.pipeline.gold_district_verdicts`
+- `data_readiness_desk.pipeline.gold_fix_ranking`
+- `data_readiness_desk.pipeline.gold_coverage_predictions`
 
 ## Local Shape
 

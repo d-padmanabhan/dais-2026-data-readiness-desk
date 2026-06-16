@@ -159,11 +159,11 @@ Goal: land every source as raw Delta once. Do not reread raw files in later phas
 
 Expected bronze tables:
 
-- `data_readiness_desk.bronze.facilities` sourced from the shared facilities table
-- `data_readiness_desk.bronze.pincode`
-- `data_readiness_desk.bronze.hmis`
-- `data_readiness_desk.bronze.srs`
-- `data_readiness_desk.bronze.district_boundaries`
+- `data_readiness_desk.pipeline.bronze_facilities` sourced from the shared facilities table
+- `data_readiness_desk.pipeline.bronze_india_post_pincode_directory`
+- `data_readiness_desk.pipeline.bronze_hmis_2019_20_slice`
+- `data_readiness_desk.pipeline.bronze_srs`
+- `data_readiness_desk.pipeline.bronze_district_boundaries`
 
 The current bundle already has bronze ingestion for PIN and NFHS foundation data. Extend it for facilities, HMIS, SRS, and district boundaries as files become available.
 
@@ -173,11 +173,11 @@ Silver is where grain discipline and denominator discipline live.
 
 Build or extend these outputs:
 
-- `data_readiness_desk.silver.facilities_geo`: facility points with validated coordinates and source geography fields.
-- `data_readiness_desk.silver.pincode_lookup`: one row per PIN with ambiguity flags.
-- `data_readiness_desk.silver.nfhs_indicator_quality_long`: NFHS values with suppressed/low-sample flags.
-- `data_readiness_desk.silver.hmis_long`: HMIS wide monthly values normalized to long form with `geo_grain`.
-- `data_readiness_desk.silver.srs_state`: state-grain weak anchor table.
+- `data_readiness_desk.pipeline.silver_facilities_geo`: facility points with validated coordinates and source geography fields.
+- `data_readiness_desk.pipeline.silver_pincode_lookup`: one row per PIN with ambiguity flags.
+- `data_readiness_desk.pipeline.silver_nfhs_indicator_quality_long`: NFHS values with suppressed/low-sample flags.
+- `data_readiness_desk.pipeline.silver_hmis_2019_20_long`: HMIS wide monthly values normalized to long form with `geo_grain`.
+- `data_readiness_desk.pipeline.silver_srs_state`: state-grain weak anchor table.
 
 Important rules:
 
@@ -192,11 +192,11 @@ Train or stub the model once, then batch-score to a gold table. Never train live
 
 Target output:
 
-- `data_readiness_desk.gold.coverage_predictions`
+- `data_readiness_desk.pipeline.gold_coverage_predictions`
 
 Recommended path:
 
-1. Build `data_readiness_desk.silver.disease_training` from districts where NFHS and HMIS agree enough for training.
+1. Build `data_readiness_desk.pipeline.silver_disease_training` from districts where NFHS and HMIS agree enough for training.
 1. Train AutoML once with a small timeout.
 1. Register the model or document a static fallback.
 1. Batch-score all demo entities and write predictions to gold.
@@ -209,11 +209,11 @@ Gold is the app contract. Compute all verdicts and fixes before the demo.
 
 Expected gold outputs:
 
-- `data_readiness_desk.gold.facility_verdicts`
-- `data_readiness_desk.gold.district_verdicts`
-- `data_readiness_desk.gold.fix_ranking`
-- `data_readiness_desk.gold.coverage_predictions`
-- `data_readiness_desk.gold.facility_caps`
+- `data_readiness_desk.pipeline.gold_facility_verdicts`
+- `data_readiness_desk.pipeline.gold_district_verdicts`
+- `data_readiness_desk.pipeline.gold_fix_ranking`
+- `data_readiness_desk.pipeline.gold_coverage_predictions`
+- `data_readiness_desk.pipeline.gold_facility_caps`
 
 Rules:
 
