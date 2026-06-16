@@ -6,57 +6,108 @@ These diagrams are version-controlled Mermaid diagrams so they render in GitHub 
 
 - [Diagrams](#diagrams)
   - [Table of Contents](#table-of-contents)
-  - [System Overview](#system-overview)
+  - [Target State Architecture](#target-state-architecture)
   - [Demo Flow](#demo-flow)
   - [Scoring Pipeline](#scoring-pipeline)
   - [PIN Readiness Decision](#pin-readiness-decision)
 
-## System Overview
+## Target State Architecture
 
 ```mermaid
 flowchart LR
-  subgraph source [Source Files And Tables]
-    FacilitiesTable["Shared Facilities Table"]
-    PincodeCsv["India Post PIN Code CSV"]
-    BoundaryGeojson["District Boundaries GeoJSON"]
-    NfhsCsv["NFHS-5 District CSV"]
-    HmisCsv["HMIS 2019-20 Slice"]
+  subgraph users["1. Users And Demo Surface"]
+    Planner["Health Planner<br/>Judge or demo user"]
+    Browser["Browser<br/>Interactive app session"]
+  end
+
+  subgraph app["2. Free Databricks App Runtime"]
+    ReactClient["React + Vite Client<br/>Verdict cards and tables"]
+    NodeServer["Node.js Server<br/>Read-only API"]
+    StatementApi["SQL Statement API<br/>Parameterized queries"]
+  end
+
+  subgraph access["3. Governance And Access"]
+    ServicePrincipal["Service Principal OAuth<br/>CI and local automation"]
+    UserGrant["Read Grant<br/>USE CATALOG, USE SCHEMA, SELECT"]
+    Catalog["Unity Catalog<br/>data_readiness_desk"]
+    PipelineSchema["Schema<br/>pipeline"]
+    SourceVolume["Volume<br/>bronze.files"]
+  end
+
+  subgraph sources["4. Source Data"]
+    FacilitiesTable["Shared Facilities Table<br/>Virtue Foundation dataset"]
+    HmisCsv["HMIS 2019-20 CSV<br/>State-grain fallback"]
     SrsCsv["SRS 2020 State CSV"]
+    BoundaryGeojson["India District GeoJSON"]
+    PincodeCsv["India Post PIN CSV<br/>Optional"]
+    NfhsSource["NFHS-5 District Data<br/>Optional table or file"]
   end
 
-  subgraph bundle [Databricks Bundle]
-    BronzeNotebook["01 Ingest Bronze"]
-    SilverNotebook["02 Build Silver"]
-    ModelNotebook["03 Train Or Static Predictions"]
-    GoldNotebook["03 Build Gold"]
-    DemoNotebook["04 Demo Queries"]
-    App["Free Databricks App<br/>React, Vite, Node.js"]
+  subgraph bundle["5. Declarative Automation Bundle"]
+    Preflight["00 Preflight<br/>Source and access checks"]
+    BronzeNotebook["01 Ingest Bronze<br/>Raw Delta tables"]
+    SilverNotebook["02 Build Silver<br/>Normalize and flag quality"]
+    GoldNotebook["03 Build Gold<br/>Cached verdict outputs"]
+    DemoNotebook["04 Demo Queries<br/>Smoke-test outputs"]
   end
 
-  subgraph tables [Unity Catalog Delta Tables]
-    BronzeTables["Bronze Raw Tables"]
-    SilverTables["Silver Readiness Tables"]
-    GoldTables["Gold Verdict Tables"]
-    Lakebase["Lakebase Score History"]
-    QualityChecks["pipeline_quality_checks"]
+  subgraph outputs["6. Medallion Outputs"]
+    BronzeTables["Bronze Prefixed Tables<br/>source-aligned rows"]
+    SilverTables["Silver Tables<br/>quality flags and normalized geography"]
+    FacilityVerdicts["gold_facility_verdicts<br/>location and completeness trust"]
+    HmisSummary["gold_hmis_state_indicator_summary<br/>state-grain caution"]
+    QualityChecks["pipeline_quality_checks<br/>run health checks"]
+    FutureGold["Future Gold Tables<br/>district verdicts and fix ranking"]
   end
 
-  FacilitiesFile --> BronzeNotebook
-  PincodeCsv --> BronzeNotebook
-  BoundaryGeojson --> BronzeNotebook
-  NfhsCsv --> BronzeNotebook
-  HmisCsv --> BronzeNotebook
-  SrsCsv --> BronzeNotebook
+  subgraph demo["7. Demo Guardrails"]
+    CachedOnly["Cached outputs only"]
+    ReadOnly["App is read-only"]
+    NoLiveTraining["No live training or writes"]
+    Uncertainty["Uncertainty is visible"]
+  end
+
+  Planner --> Browser
+  Browser --> ReactClient
+  ReactClient --> NodeServer
+  NodeServer --> StatementApi
+  StatementApi --> PipelineSchema
+
+  ServicePrincipal --> Catalog
+  UserGrant --> Catalog
+  Catalog --> PipelineSchema
+  Catalog --> SourceVolume
+
+  HmisCsv --> SourceVolume
+  SrsCsv --> SourceVolume
+  BoundaryGeojson --> SourceVolume
+  PincodeCsv -. when available .-> SourceVolume
+  NfhsSource -. when available .-> BronzeNotebook
+  FacilitiesTable --> BronzeNotebook
+  SourceVolume --> Preflight
+  FacilitiesTable --> Preflight
+  Preflight --> BronzeNotebook
   BronzeNotebook --> BronzeTables
   BronzeTables --> SilverNotebook
   SilverNotebook --> SilverTables
   SilverNotebook --> QualityChecks
-  SilverTables --> ModelNotebook
-  ModelNotebook --> GoldNotebook
-  GoldNotebook --> GoldTables
-  GoldTables --> Lakebase
-  GoldTables --> DemoNotebook
-  GoldTables --> App
+  SilverTables --> GoldNotebook
+  GoldNotebook --> FacilityVerdicts
+  GoldNotebook --> HmisSummary
+  GoldNotebook -. planned .-> FutureGold
+  FacilityVerdicts --> DemoNotebook
+  HmisSummary --> DemoNotebook
+  QualityChecks --> DemoNotebook
+  FacilityVerdicts --> StatementApi
+  HmisSummary --> StatementApi
+  QualityChecks --> StatementApi
+
+  FacilityVerdicts --> CachedOnly
+  HmisSummary --> CachedOnly
+  CachedOnly --> ReadOnly
+  CachedOnly --> NoLiveTraining
+  FacilityVerdicts --> Uncertainty
+  HmisSummary --> Uncertainty
 ```
 
 ## Demo Flow
