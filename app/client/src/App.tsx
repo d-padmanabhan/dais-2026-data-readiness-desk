@@ -71,6 +71,35 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function formatCaution(value?: string): string {
+  if (!value) {
+    return "No additional caution";
+  }
+  if (value === "state_grain_hmis_fallback_not_district_reconciliation") {
+    return "State-grain fallback; not district-level reconciliation";
+  }
+  if (value === "state_rollup_before_district_polygon_assignment") {
+    return "State rollup before district polygon assignment";
+  }
+  return value
+    .split("_")
+    .filter(Boolean)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
+}
+
+function formatPercent(value?: string): string {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return "Unavailable";
+  }
+  return `${numericValue.toFixed(1)}%`;
+}
+
+function displayValue(value?: string): string {
+  return value && value !== "null" ? value : "Unavailable";
+}
+
 function toFacilityRows(result: QueryResult): FacilityMatch[] {
   return rowsToObjects(result).map((row) => ({
     band: row.band === "green" || row.band === "amber" || row.band === "red" ? row.band : "red",
@@ -202,7 +231,7 @@ export function App(): ReactElement {
             </div>
             <div>
               <dt>Pending issue</dt>
-              <dd>{selectedFacility?.data_caution ?? "state-grain fallback"}</dd>
+              <dd>{formatCaution(selectedFacility?.data_caution)}</dd>
             </div>
           </dl>
           <div className="map-panel" aria-label="Facility coordinate preview">
@@ -276,9 +305,9 @@ export function App(): ReactElement {
                 {hmisRows.map((row) => (
                   <tr key={row.state_name}>
                     <td>{row.state_name}</td>
-                    <td>{Number(row.anc_four_plus_rate_percent).toFixed(1)}%</td>
-                    <td>{Number(row.institutional_delivery_to_live_birth_ratio_percent).toFixed(1)}%</td>
-                    <td>{row.data_caution}</td>
+                    <td>{formatPercent(row.anc_four_plus_rate_percent)}</td>
+                    <td>{formatPercent(row.institutional_delivery_to_live_birth_ratio_percent)}</td>
+                    <td>{formatCaution(row.data_caution)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -304,13 +333,13 @@ export function App(): ReactElement {
               <tbody>
                 {facilityRows.map((row) => (
                   <tr key={row.source_state_name}>
-                    <td>{row.source_state_name}</td>
-                    <td>{row.total_facilities}</td>
+                    <td>{displayValue(row.source_state_name)}</td>
+                    <td>{displayValue(row.total_facilities)}</td>
                     <td>
-                      {row.valid_coordinate_facilities} / {row.total_facilities}
+                      {displayValue(row.valid_coordinate_facilities)} / {displayValue(row.total_facilities)}
                     </td>
-                    <td>{row.band}</td>
-                    <td>{row.binding_reason}</td>
+                    <td>{displayValue(row.band)}</td>
+                    <td>{displayValue(row.binding_reason)}</td>
                   </tr>
                 ))}
               </tbody>

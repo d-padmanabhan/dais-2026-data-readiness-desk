@@ -116,14 +116,18 @@ async function buildReadinessSummary() {
       SELECT
         source_state_name,
         source_state_normalized,
-        total_facilities,
-        valid_coordinate_facilities,
+        COALESCE(total_facilities, 0) AS total_facilities,
+        COALESCE(valid_coordinate_facilities, 0) AS valid_coordinate_facilities,
         numeric_score,
         band,
         binding_reason,
         data_caution
       FROM data_readiness_desk.pipeline.gold_facility_verdicts
       WHERE source_state_name IS NOT NULL
+        AND lower(source_state_name) <> 'null'
+        AND source_state_name NOT LIKE '{%'
+        AND source_state_name NOT LIKE '%coordinates%'
+        AND NOT source_state_name RLIKE '^[0-9]+$'
         AND source_state_name RLIKE '[A-Za-z]'
       ORDER BY numeric_score ASC
       LIMIT 8
@@ -178,6 +182,10 @@ async function buildReadinessSummary() {
         ON f.source_state_normalized = v.source_state_normalized
       WHERE f.name IS NOT NULL
         AND f.source_state_name IS NOT NULL
+        AND lower(f.source_state_name) <> 'null'
+        AND f.source_state_name NOT LIKE '{%'
+        AND f.source_state_name NOT LIKE '%coordinates%'
+        AND NOT f.source_state_name RLIKE '^[0-9]+$'
         AND f.source_state_name RLIKE '[A-Za-z]'
       ORDER BY
         CASE WHEN lower(f.name) LIKE '%aravind%' THEN 0 ELSE 1 END,
