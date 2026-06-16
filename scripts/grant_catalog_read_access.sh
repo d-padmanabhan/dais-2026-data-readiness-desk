@@ -12,6 +12,7 @@
 # Examples            : ./scripts/grant_catalog_read_access.sh --principal john.doe@acme.com
 #                       ./scripts/grant_catalog_read_access.sh --principal john.doe@acme.com --warehouse-id 4e307d33a4466b55
 #                       DATABRICKS_WAREHOUSE_ID=4e307d33a4466b55 ./scripts/grant_catalog_read_access.sh --principal analysts
+#                       ./scripts/grant_catalog_read_access.sh --app-name data-readiness-desk --warehouse-id 4e307d33a4466b55
 #
 ##----------------------------------------------------------------------------------------##
 # Turn debug on or off
@@ -27,6 +28,7 @@ readonly DEFAULT_VOLUME="files"
 
 warehouse_id="${DATABRICKS_WAREHOUSE_ID:-}"
 principal=""
+app_name=""
 catalog="${DEFAULT_CATALOG}"
 table_schema="${DEFAULT_TABLE_SCHEMA}"
 volume_schema="${DEFAULT_VOLUME_SCHEMA}"
@@ -51,10 +53,11 @@ require_command() {
 show_help() {
   cat << 'EOF'
 Usage:
-  grant_catalog_read_access.sh --principal <email-or-group> [options]
+  grant_catalog_read_access.sh (--principal <email-or-group> | --app-name <name>) [options]
 
 Options:
   --principal <name>      Required Databricks user, service principal, or group
+  --app-name <name>       Resolve and grant to a Databricks App service principal
   --warehouse-id <id>     SQL Warehouse ID used to execute grant SQL
   --catalog <name>        Unity Catalog catalog name (default: data_readiness_desk)
   --schema <name>         Table schema used by the bundle (default: pipeline)
@@ -76,6 +79,11 @@ parse_args() {
       --principal)
         [[ $# -ge 2 ]] || die "--principal requires a value"
         principal="$2"
+        shift 2
+        ;;
+      --app-name)
+        [[ $# -ge 2 ]] || die "--app-name requires a value"
+        app_name="$2"
         shift 2
         ;;
       --warehouse-id)
@@ -113,7 +121,7 @@ parse_args() {
     esac
   done
 
-  [[ -n "${principal}" ]] || die "--principal is required"
+  [[ -n "${principal}" || -n "${app_name}" ]] || die "--principal or --app-name is required"
   [[ -n "${warehouse_id}" ]] || die "--warehouse-id or DATABRICKS_WAREHOUSE_ID is required"
 }
 
@@ -126,6 +134,24 @@ validate_identifier() {
 quoted_principal() {
   [[ "${principal}" != *'`'* ]] || die "Principal cannot contain a backtick"
   printf '`%s`' "${principal}"
+}
+
+resolve_app_principal() {
+  local app_payload
+  local app_service_principal_client_id
+  local app_service_principal_name
+
+  [[ -z "${principal}" || -z "${app_name}" ]] || die "Use only one of --principal or --app-name"
+  [[ -n "${app_name}" ]] || return
+
+  logmsg "Resolving service principal for Databricks App: ${app_name}"
+  app_payload="$(databricks apps get "${app_name}" --output json)"
+  app_service_principal_client_id="$(jq -r '.service_principal_client_id // empty' <<< "${app_payload}")"
+  app_service_principal_name="$(jq -r '.service_principal_name // empty' <<< "${app_payload}")"
+  [[ -n "${app_service_principal_client_id}" ]] || die "App did not expose service_principal_client_id: ${app_name}"
+
+  principal="${app_service_principal_client_id}"
+  logmsg "Resolved ${app_name} to service principal ${principal} (${app_service_principal_name})"
 }
 
 execute_sql_statement() {
@@ -174,13 +200,14 @@ main() {
   require_command databricks
   require_command jq
 
+  logmsg "Validating Databricks service-principal auth"
+  databricks current-user me > /dev/null
+  resolve_app_principal
+
   validate_identifier "catalog" "${catalog}"
   validate_identifier "schema" "${table_schema}"
   validate_identifier "volume schema" "${volume_schema}"
   validate_identifier "volume" "${volume}"
-
-  logmsg "Validating Databricks service-principal auth"
-  databricks current-user me > /dev/null
 
   grant_read_access
   logmsg "Granted read access on ${catalog} to ${principal}"

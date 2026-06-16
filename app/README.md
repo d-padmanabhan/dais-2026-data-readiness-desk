@@ -35,3 +35,17 @@ Deploy from the repository root:
 Current dev app:
 
 [Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
+
+## App Permissions
+
+The app runs as a Databricks-managed service principal. Grant that service principal read access before using the app API:
+
+```bash
+./scripts/grant_catalog_read_access.sh \
+  --app-name data-readiness-desk \
+  --warehouse-id 4e307d33a4466b55
+```
+
+The helper resolves the app's Databricks-managed service principal and grants `USE CATALOG`, `USE SCHEMA`, and `SELECT` on `data_readiness_desk.pipeline`.
+
+If `/api/readiness-summary` returns HTML instead of JSON, check app logs and verify the app service principal has those grants. HTML usually means the browser received an app/auth error page instead of the JSON API payload.

@@ -153,6 +153,40 @@ GRANT USE SCHEMA ON SCHEMA data_readiness_desk.bronze TO `<principal>`;
 GRANT READ VOLUME ON VOLUME data_readiness_desk.bronze.files TO `<principal>`;
 ```
 
+Grant the same read access to the Free Databricks App service principal before relying on the app API:
+
+```bash
+./scripts/grant_catalog_read_access.sh \
+  --app-name data-readiness-desk \
+  --warehouse-id 4e307d33a4466b55 \
+  --catalog data_readiness_desk \
+  --schema pipeline \
+  --volume-schema bronze \
+  --volume files
+```
+
+The script resolves `data-readiness-desk` to its Databricks-managed service principal before issuing grants. The current app principal is:
+
+```text
+service_principal_client_id: faacde25-a372-42b3-8e55-f3f24bd2dc32
+service_principal_name: app-1zobg3 data-readiness-desk
+```
+
+Manual SQL fallback:
+
+```sql
+GRANT USE CATALOG ON CATALOG data_readiness_desk
+  TO `faacde25-a372-42b3-8e55-f3f24bd2dc32`;
+
+GRANT USE SCHEMA ON SCHEMA data_readiness_desk.pipeline
+  TO `faacde25-a372-42b3-8e55-f3f24bd2dc32`;
+
+GRANT SELECT ON SCHEMA data_readiness_desk.pipeline
+  TO `faacde25-a372-42b3-8e55-f3f24bd2dc32`;
+```
+
+Why this matters: the app runs as its own Databricks-managed service principal, not as the interactive user who created the catalog. If that app principal lacks `USE CATALOG`, `USE SCHEMA`, and `SELECT`, the Node API can fail while the same SQL works from a local CLI session. A browser message such as `Unexpected token '<'` usually means the frontend tried to parse an HTML error page as JSON, often because the backend request hit an auth, app-startup, or permission failure.
+
 ## Phase 2 - Bronze Ingest
 
 Goal: land every source as raw Delta once. Do not reread raw files in later phases.
@@ -377,6 +411,37 @@ The silver notebook looks for common normalized names such as `state`, `state_ut
 ### Metrics Are Null in the Underserved Candidate Table
 
 The gold notebook discovers likely columns by substring. If your NFHS extract uses different indicator wording, update the `find_metric` terms in [notebooks/03_build_gold.py](../notebooks/03_build_gold.py).
+
+### App API Returns HTML Instead Of JSON
+
+Symptom: the browser or React app reports that `/api/readiness-summary` received HTML instead of JSON.
+
+Likely causes:
+
+- The app backend is not running, so Databricks Apps returns an HTML error page.
+- `DATABRICKS_HOST` is malformed. The server normalizes bare hostnames to `https://...`, but non-HTTPS values are rejected.
+- The app service principal cannot read Unity Catalog objects.
+
+Diagnosis:
+
+```bash
+databricks apps get data-readiness-desk --output json
+databricks apps logs data-readiness-desk --tail-lines 100
+```
+
+Permission fix:
+
+```bash
+./scripts/grant_catalog_read_access.sh \
+  --app-name data-readiness-desk \
+  --warehouse-id 4e307d33a4466b55
+```
+
+Then redeploy:
+
+```bash
+./scripts/deploy_databricks_app.sh
+```
 
 ## Quota-Safety Checklist
 
