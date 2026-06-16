@@ -320,9 +320,25 @@ button:focus-visible {
   gap: 8px;
 }
 
-.match-select small {
+.match-help {
   color: #6b7280;
   font-size: 0.82rem;
+}
+
+.inline-action {
+  background: transparent;
+  border: 0;
+  color: #0d2340;
+  display: inline;
+  font-size: inherit;
+  font-weight: 900;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.inline-action:hover {
+  background: transparent;
+  color: #b8860b;
 }
 
 .fix-card {

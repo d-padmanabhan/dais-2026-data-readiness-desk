@@ -338,9 +338,26 @@ export function App(): ReactElement {
                 <option value="">No facility match found</option>
               )}
             </select>
-            <small>
-              Showing {filteredFacilities.length} of {matchingFacilities.length} matches from {facilities.length} loaded facilities.
-            </small>
+            <span className="match-help">
+              {normalizedQuery ? (
+                <>
+                  {matchingFacilities.length} matches for "{query}".{" "}
+                  <button
+                    className="inline-action"
+                    onClick={() => {
+                      setQuery("");
+                      setSelectedFacilityId("");
+                      setSimulated(false);
+                    }}
+                    type="button"
+                  >
+                    Browse all {facilities.length} facilities
+                  </button>
+                </>
+              ) : (
+                <>Showing {filteredFacilities.length} of {facilities.length} loaded facilities.</>
+              )}
+            </span>
           </label>
 
           <article className="card fix-card">
