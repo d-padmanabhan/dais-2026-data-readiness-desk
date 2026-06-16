@@ -4,9 +4,15 @@ This folder contains the Free Databricks App scaffold for the Data Readiness Des
 
 The app must read cached gold outputs only. It should not train models, call AI functions, write Delta tables, or recompute scores during the live demo.
 
-## Expected Gold Tables
+## Current Gold Tables
 
 - `data_readiness_desk.pipeline.gold_facility_verdicts`
+- `data_readiness_desk.pipeline.gold_hmis_state_indicator_summary`
+
+The Node.js server exposes `/api/readiness-summary`, which reads the current cached gold outputs through the Databricks SQL Statement API. The app is intentionally read-only for demo safety.
+
+## Planned Gold Tables
+
 - `data_readiness_desk.pipeline.gold_district_verdicts`
 - `data_readiness_desk.pipeline.gold_fix_ranking`
 - `data_readiness_desk.pipeline.gold_coverage_predictions`

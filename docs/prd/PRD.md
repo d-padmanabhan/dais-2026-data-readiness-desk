@@ -19,6 +19,9 @@ Implemented:
 - HMIS silver long-form table.
 - Curated HMIS annual indicator totals.
 - Gold state-grain HMIS fallback summary.
+- Silver facility geography output for 10,088 shared-table facility rows.
+- First-pass gold facility verdict rollups for 255 source-state groups.
+- Free Databricks App API and React UI reading cached HMIS and facility verdict outputs.
 - Data contracts for expected source files.
 - Pure Python helpers for normalization, readiness, HMIS parsing, and Trust Verdict scoring.
 - Free Databricks App scaffold that uses Vite, React, and Node.js inside Databricks Apps and is read-only by design.
@@ -58,8 +61,8 @@ Current source availability:
 
 ## Acceptance Criteria
 
-- Location lens scores all facility records from cached data.
-- Disease lens demonstrates at least one NFHS/HMIS trust verdict or documented state-grain fallback.
+- Location lens scores facility state/source-state rollups from cached data.
+- Disease lens demonstrates a documented state-grain HMIS fallback until district-grain reconciliation is available.
 - Free Databricks App shows verdict card, reason, ranked fixes, and cached before/after behavior.
 - `ai_extract` output exists or is explicitly scaffolded as the fallback.
 - AutoML predictions exist or a static fallback table is documented.
@@ -67,8 +70,7 @@ Current source availability:
 
 ## Open Risks
 
-- Facility and boundary files are not currently present locally.
 - Current HMIS file is state-grain, not district-grain.
-- App still uses placeholder UI until real gold verdict tables are available.
-- Gold verdict and fix-ranking tables are not yet implemented.
-- Bundle defaults are validated, but source Volume creation/upload still needs execution in Databricks.
+- PIN and NFHS-dependent gold tables are empty until those sources are available.
+- District-level point-in-polygon facility assignment is not yet implemented.
+- Fix-ranking, AutoML/static predictions, and `ai_extract` outputs are not yet implemented.

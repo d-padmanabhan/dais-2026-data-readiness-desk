@@ -22,18 +22,20 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 - HMIS header/value parsing helpers for the currently uploaded state-grain file.
 - HMIS curated annual indicator totals for ANC, institutional delivery, births, and immunization.
 - HMIS state-grain fallback summary table for demo disease-lens exploration.
+- Facilities shared table ingest with `silver_facilities_geo` output for 10,088 facility rows.
+- First-pass `gold_facility_verdicts` output with 255 state/source-state rollups.
+- Free Databricks App API reads cached `gold_hmis_state_indicator_summary` and `gold_facility_verdicts`.
 - Mermaid diagrams and decision log.
 - GitHub Actions CI hardened for pre-commit and guarded Databricks validation.
 
 ## Scaffolded
 
 - [data](../data/) source file folder and ingest guidance.
-- [app](../app/) Free Databricks App shell that uses Vite, React, and Node.js inside Databricks Apps and reads cached gold outputs only.
+- [app](../app/) Free Databricks App shell that uses Vite, React, and Node.js inside Databricks Apps and reads the current cached gold outputs only.
 - [config/scoring.yaml](../config/scoring.yaml) with score thresholds and quota-safety defaults.
 
 ## Remaining Build Work
 
-- Ingest SRS and `india_districts.geojson`; facilities are read from the shared Databricks table.
 - Decide whether the current state-grain HMIS file is sufficient as a fallback or whether the disease lens needs a district-grain HMIS extract from another source.
 - Add point-in-polygon facility district assignment.
 - Normalize HMIS denominators and publish comparable district rates.
@@ -47,7 +49,7 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 
 If time is short, prioritize:
 
-1. Location lens for the 100 facilities.
-1. Institutional-delivery NFHS/HMIS corroboration for at least one district.
+1. Facility location/completeness trust using `gold_facility_verdicts`.
+1. State-grain HMIS fallback using `gold_hmis_state_indicator_summary`.
 1. One before/after fix flow from cached rows.
 1. A clear explanation that model predictions and `ai_extract` are scaffolded or precomputed.

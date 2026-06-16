@@ -206,7 +206,7 @@ Divergence ≠ error (structural denominator differences). Tolerance widens with
 
 ## Acceptance Criteria
 
-1. Location lens scores all 100 facilities end-to-end from cached table.
+1. Location lens scores cached facility trust rollups derived from the shared facilities table.
 2. Disease lens reconciles NFHS<->HMIS institutional delivery for >=1 demo district, shows denominator explanation on divergence.
 3. AutoML model trained, registered, predictions in scored table.
 4. `ai_extract` produces structured attrs for >=1 facility, tagged partial-confidence.

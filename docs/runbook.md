@@ -249,7 +249,7 @@ databricks apps deploy data-readiness-desk-app --source-code-path /Workspace/Use
 
 Dry-run acceptance criteria:
 
-- Location lens scores all 100 facilities from cached data.
+- Location lens reads cached facility trust rollups derived from 10,088 shared-table facility rows.
 - Disease lens reconciles NFHS/HMIS institutional delivery for at least one demo district or documented state-grain fallback.
 - Model predictions table exists.
 - `ai_extract` output exists for at least one facility and is tagged partial-confidence.

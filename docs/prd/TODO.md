@@ -25,6 +25,8 @@
   - [x] `silver_hmis_2019_20_long`
   - [x] `silver_hmis_2019_20_indicator_totals`
   - [x] `gold_hmis_state_indicator_summary`
+  - [x] `silver_facilities_geo` has 10,088 rows in dev.
+  - [x] `gold_facility_verdicts` has 255 rows in dev.
 
 ## Build Work
 
@@ -65,12 +67,13 @@
   - [ ] Document the fallback honestly in demo notes.
 
 - [ ] Wire Free Databricks App.
-  - [ ] Read real cached gold tables.
-  - [ ] Add verdict card.
-  - [ ] Add map or table view.
+  - [x] Read real cached gold tables.
+  - [x] Add static verdict card.
+  - [ ] Wire verdict card to selected cached output.
+  - [x] Add table view.
   - [ ] Add ranked fixes.
   - [ ] Add before/after toggle from cached rows.
-  - [ ] Enforce read-only, gold-only queries.
+  - [x] Enforce read-only, gold-only queries for current API.
   - [ ] Confirm the app runs as a Free Databricks App, not externally hosted web app.
 
 ## Demo Prep

@@ -274,3 +274,28 @@ Key columns:
 - `data_caution`
 
 Important caveat: this is a state-grain fallback, not district-level disease reconciliation.
+
+### `gold_facility_verdicts`
+
+State/source-state rollup of facility location and profile completeness trust.
+
+Verified dev row count: 255.
+
+Key columns:
+
+- `source_state_name`
+- `source_state_normalized`
+- `total_facilities`
+- `valid_coordinate_facilities`
+- `pincode_present_facilities`
+- `capability_text_facilities`
+- `avg_care_substance_missing_count`
+- `location_trust_score`
+- `data_completeness_score`
+- `numeric_score`
+- `band`
+- `binding_reason`
+- `geo_grain`
+- `data_caution`
+
+Important caveat: this is a first-pass state/source-state rollup before district polygon assignment. It is useful for the demo's location trust story, but it is not yet a district-level point-in-polygon verdict.
