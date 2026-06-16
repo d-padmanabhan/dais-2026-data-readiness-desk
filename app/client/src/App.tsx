@@ -1,5 +1,7 @@
 import type { ReactElement } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import * as L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 type QueryResult = {
   columns: { name: string }[];
@@ -100,6 +102,15 @@ function displayValue(value?: string): string {
   return value && value !== "null" ? value : "Unavailable";
 }
 
+function markerIconForBand(band: FacilityMatch["band"]): L.DivIcon {
+  return L.divIcon({
+    className: `readiness-map-marker readiness-map-marker-${band}`,
+    html: '<span></span>',
+    iconAnchor: [12, 12],
+    iconSize: [24, 24],
+  });
+}
+
 function toFacilityRows(result: QueryResult): FacilityMatch[] {
   return rowsToObjects(result).map((row) => ({
     band: row.band === "green" || row.band === "amber" || row.band === "red" ? row.band : "red",
@@ -125,6 +136,9 @@ export function App(): ReactElement {
   const [lens, setLens] = useState<"Facility" | "Location">("Facility");
   const [selectedFacilityId, setSelectedFacilityId] = useState("");
   const [simulated, setSimulated] = useState(false);
+  const mapElementRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -170,9 +184,63 @@ export function App(): ReactElement {
     Boolean(selectedFacility?.longitude) &&
     Number.isFinite(latitude) &&
     Number.isFinite(longitude);
-  const markerLeft = hasCoordinates ? clamp(((longitude - 68) / 30) * 100, 5, 95) : 50;
-  const markerTop = hasCoordinates ? clamp(((37 - latitude) / 31) * 100, 5, 95) : 50;
+  const mapCenter: [number, number] = hasCoordinates ? [latitude, longitude] : [22.8, 79.2];
   const readinessTitle = selectedFacility?.name ?? "Select a facility";
+
+  useEffect(() => {
+    if (!hasCoordinates || !mapElementRef.current) {
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
+      }
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      return undefined;
+    }
+
+    if (!mapRef.current) {
+      mapRef.current = L.map(mapElementRef.current, {
+        attributionControl: true,
+        scrollWheelZoom: false,
+      });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(mapRef.current);
+    }
+
+    mapRef.current.setView(mapCenter, 8);
+
+    if (markerRef.current) {
+      markerRef.current.remove();
+    }
+
+    const popupContent = document.createElement("div");
+    const popupTitle = document.createElement("strong");
+    const popupState = document.createElement("div");
+    const popupScore = document.createElement("div");
+    popupTitle.textContent = selectedFacility?.name ?? "Selected facility";
+    popupState.textContent = selectedFacility?.source_state_name ?? "";
+    popupScore.textContent = `Readiness: ${displayedScore}%`;
+    popupContent.append(popupTitle, popupState, popupScore);
+
+    markerRef.current = L.marker(mapCenter, { icon: markerIconForBand(selectedBand) })
+      .addTo(mapRef.current)
+      .bindPopup(popupContent);
+
+    return undefined;
+  }, [displayedScore, hasCoordinates, mapCenter, selectedBand, selectedFacility?.name, selectedFacility?.source_state_name]);
+
+  useEffect(
+    () => () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    },
+    [],
+  );
 
   return (
     <main className="shell">
@@ -234,16 +302,20 @@ export function App(): ReactElement {
               <dd>{formatCaution(selectedFacility?.data_caution)}</dd>
             </div>
           </dl>
-          <div className="map-panel" aria-label="Facility coordinate preview">
-            <div className="map-grid" />
+          <div className="map-panel" aria-label="Facility map">
             {hasCoordinates ? (
-              <div className={`map-marker marker-${selectedBand}`} style={{ left: `${markerLeft}%`, top: `${markerTop}%` }} />
+              <div className="leaflet-container" ref={mapElementRef} />
+            ) : (
+              <div className="map-fallback">
+                <p className="eyebrow">Map unavailable</p>
+                <p>Coordinates are missing for this facility. Add latitude and longitude before using location trust.</p>
+              </div>
+            )}
+            {hasCoordinates ? (
+              <div className="map-caption">
+                {selectedFacility?.source_state_name ?? "Unknown"} ({latitude.toFixed(2)}, {longitude.toFixed(2)})
+              </div>
             ) : null}
-            <div className="map-caption">
-              {hasCoordinates
-                ? `${selectedFacility?.source_state_name ?? "Unknown"} (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`
-                : "Coordinates unavailable"}
-            </div>
           </div>
         </article>
 

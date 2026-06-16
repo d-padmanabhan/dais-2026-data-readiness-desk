@@ -14,12 +14,15 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "typescript": "latest",
-    "vite": "latest",
+    "leaflet": "^1.9.4",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "typescript": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
+    "@types/geojson": "^7946.0.16",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest"

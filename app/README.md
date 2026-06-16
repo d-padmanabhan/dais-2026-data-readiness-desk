@@ -17,7 +17,7 @@ The Node.js server exposes `/api/readiness-summary`, which reads the current cac
 - Location and Facility lens toggle.
 - Facility match selector populated from `silver_facilities_geo`.
 - Dynamic readiness score driven by `gold_facility_verdicts`.
-- Coordinate preview panel for the selected facility.
+- Interactive Leaflet/OpenStreetMap view for the selected facility.
 - Ranked data-readiness fix recommendations.
 - Simulated score lift for applying the top fix.
 - HMIS state summary and facility verdict evidence tables.
