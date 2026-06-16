@@ -162,16 +162,15 @@ export function App(): ReactElement {
   const facilityRows = summary?.status === "ok" ? rowsToObjects(summary.facilityVerdicts) : [];
   const facilities = summary?.status === "ok" ? toFacilityRows(summary.facilityMatches) : [];
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredFacilities = facilities
-    .filter((facility) => {
+  const matchingFacilities = facilities.filter((facility) => {
       if (!normalizedQuery) {
         return true;
       }
       return [facility.name, facility.source_state_name, facility.pincode].some((value) =>
         value.toLowerCase().includes(normalizedQuery),
       );
-    })
-    .slice(0, 20);
+    });
+  const filteredFacilities = matchingFacilities.slice(0, 1000);
   const selectedFacility =
     facilities.find((facility) => facility.unique_id === selectedFacilityId) ?? filteredFacilities[0] ?? facilities[0];
   const baseScore = selectedFacility ? Math.round(Number(selectedFacility.numeric_score) * 100) : 0;
@@ -339,6 +338,9 @@ export function App(): ReactElement {
                 <option value="">No facility match found</option>
               )}
             </select>
+            <small>
+              Showing {filteredFacilities.length} of {matchingFacilities.length} matches from {facilities.length} loaded facilities.
+            </small>
           </label>
 
           <article className="card fix-card">

@@ -190,7 +190,7 @@ async function buildReadinessSummary() {
       ORDER BY
         CASE WHEN lower(f.name) LIKE '%aravind%' THEN 0 ELSE 1 END,
         f.name
-      LIMIT 800
+      LIMIT 5000
     `),
   ]);
 

@@ -320,6 +320,11 @@ button:focus-visible {
   gap: 8px;
 }
 
+.match-select small {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
 .fix-card {
   display: grid;
   gap: 12px;
