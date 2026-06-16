@@ -5,7 +5,7 @@ import { extname, join, resolve } from "node:path";
 const PORT = Number.parseInt(process.env.DATABRICKS_APP_PORT ?? "8000", 10);
 const DIST_DIR = resolve("dist");
 const WAREHOUSE_ID = process.env.DATABRICKS_WAREHOUSE_ID;
-const DATABRICKS_HOST = process.env.DATABRICKS_HOST;
+const DATABRICKS_HOST = normalizeDatabricksHost(process.env.DATABRICKS_HOST);
 
 const MIME_TYPES = new Map([
   [".css", "text/css"],
@@ -14,6 +14,21 @@ const MIME_TYPES = new Map([
   [".json", "application/json"],
   [".svg", "image/svg+xml"],
 ]);
+
+function normalizeDatabricksHost(rawHost) {
+  if (!rawHost) {
+    return undefined;
+  }
+
+  const hostWithProtocol = rawHost.startsWith("http://") || rawHost.startsWith("https://") ? rawHost : `https://${rawHost}`;
+  const parsedHost = new URL(hostWithProtocol);
+
+  if (parsedHost.protocol !== "https:") {
+    throw new Error("DATABRICKS_HOST must use https");
+  }
+
+  return parsedHost.origin;
+}
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
