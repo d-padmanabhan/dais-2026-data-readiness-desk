@@ -115,7 +115,7 @@ Key engineering references:
 
 ```bash
 set -a
-source "/Users/dpadmanabhan/code/labs/tmp/.env"
+source "${HOME}/code/labs/tmp/.env"
 set +a
 databricks current-user me
 ```

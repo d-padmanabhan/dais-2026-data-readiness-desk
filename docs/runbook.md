@@ -88,7 +88,7 @@ If `DATABRICKS_WAREHOUSE_ID` is already set in your shell, the script can read i
 
 ```bash
 set -a
-source "/Users/dpadmanabhan/code/labs/tmp/.env"
+source "${HOME}/code/labs/tmp/.env"
 set +a
 
 ./scripts/bootstrap_databricks_workspace.sh \
