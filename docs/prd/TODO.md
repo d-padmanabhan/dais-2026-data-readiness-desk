@@ -30,7 +30,7 @@
 
 - [x] Deploy Free Databricks App in dev.
   - [x] App name: `data-readiness-desk`
-  - [x] Active deployment: `01f1693063fc18ad9e73ebb3a1fb8310`
+  - [x] Active deployment: `01f1693344c2144b930678887ba328ea`
   - [x] URL: `https://data-readiness-desk-7474647240221945.aws.databricksapps.com`
 
 ## Build Work
