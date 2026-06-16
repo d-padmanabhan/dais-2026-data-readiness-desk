@@ -23,4 +23,4 @@ These exports are not canonical source. Several exported files still mention the
 
 - App name: `data-readiness-desk`
 - Dev URL: [Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
-- Active deployment: `01f1693344c2144b930678887ba328ea`
+- Active deployment: `01f169397de51825b20e33f42e36c746`
