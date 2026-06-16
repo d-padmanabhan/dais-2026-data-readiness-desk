@@ -9,8 +9,8 @@
 #
 # Script Usage        : ./scripts/grant_catalog_read_access.sh --principal <email-or-group>
 #
-# Examples            : ./scripts/grant_catalog_read_access.sh --principal devesh_padmanabhan@mckinsey.com
-#                       ./scripts/grant_catalog_read_access.sh --principal devesh_padmanabhan@mckinsey.com --warehouse-id 4e307d33a4466b55
+# Examples            : ./scripts/grant_catalog_read_access.sh --principal john.doe@acme.com
+#                       ./scripts/grant_catalog_read_access.sh --principal john.doe@acme.com --warehouse-id 4e307d33a4466b55
 #                       DATABRICKS_WAREHOUSE_ID=4e307d33a4466b55 ./scripts/grant_catalog_read_access.sh --principal analysts
 #
 ##----------------------------------------------------------------------------------------##

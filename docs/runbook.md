@@ -135,7 +135,7 @@ Grant least-privilege read access to a teammate or your own user after the catal
 
 ```bash
 ./scripts/grant_catalog_read_access.sh \
-  --principal devesh_padmanabhan@mckinsey.com \
+  --principal john.doe@acme.com \
   --warehouse-id 4e307d33a4466b55 \
   --catalog data_readiness_desk \
   --schema pipeline \
@@ -307,17 +307,17 @@ Use these commands to export the current Genie-generated artifacts:
 
 ```bash
 databricks workspace export \
-  "/Workspace/Users/devesh_padmanabhan@mckinsey.com/Data Readiness Desk - Pipeline Transforms" \
+  "/Workspace/Users/john.doe@acme.com/Data Readiness Desk - Pipeline Transforms" \
   --format SOURCE \
   --file "notebooks/genie_pipeline_transforms.py"
 
 databricks workspace export \
-  "/Workspace/Users/devesh_padmanabhan@mckinsey.com/Data Readiness Desk - App Integration" \
+  "/Workspace/Users/john.doe@acme.com/Data Readiness Desk - App Integration" \
   --format SOURCE \
   --file "notebooks/genie_app_integration.py"
 
 databricks workspace export \
-  "/Workspace/Users/devesh_padmanabhan@mckinsey.com/HACKATHON_SETUP_README.md" \
+  "/Workspace/Users/john.doe@acme.com/HACKATHON_SETUP_README.md" \
   --format SOURCE \
   --file "docs/genie/hackathon_setup.md"
 ```
