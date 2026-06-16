@@ -242,10 +242,14 @@ Genie, if used, must be user-initiated and cached. Do not call Genie on keystrok
 Create and deploy the Databricks App after gold tables exist:
 
 ```bash
-databricks apps create data-readiness-desk-app
-databricks sync ./app /Workspace/Users/<principal-or-user>/data-readiness-desk-app
-databricks apps deploy data-readiness-desk-app --source-code-path /Workspace/Users/<principal-or-user>/data-readiness-desk-app
+./scripts/deploy_databricks_app.sh
 ```
+
+The script creates the `data-readiness-desk` app if needed, syncs [app](../app/) to the current Databricks user's workspace, starts app compute, and deploys a snapshot.
+
+Current dev app URL:
+
+[Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
 
 Dry-run acceptance criteria:
 

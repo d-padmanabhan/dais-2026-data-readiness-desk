@@ -28,6 +28,11 @@
   - [x] `silver_facilities_geo` has 10,088 rows in dev.
   - [x] `gold_facility_verdicts` has 255 rows in dev.
 
+- [x] Deploy Free Databricks App in dev.
+  - [x] App name: `data-readiness-desk`
+  - [x] Active deployment: `01f1693063fc18ad9e73ebb3a1fb8310`
+  - [x] URL: `https://data-readiness-desk-7474647240221945.aws.databricksapps.com`
+
 ## Build Work
 
 - [x] Add preflight validation task.
@@ -100,7 +105,7 @@
 
 - [ ] All local tests pass.
 - [ ] Bundle validates.
-- [ ] Demo app opens.
+- [x] Demo app deploys.
 - [ ] At least one end-to-end cached verdict works.
 - [ ] Uncertainty is visible in the UI.
 - [ ] README and runbook match the actual demo path.

@@ -25,6 +25,7 @@ This document maps Vibhu's [Requirements](requirements.md) and [Runbook](runbook
 - Facilities shared table ingest with `silver_facilities_geo` output for 10,088 facility rows.
 - First-pass `gold_facility_verdicts` output with 255 state/source-state rollups.
 - Free Databricks App API reads cached `gold_hmis_state_indicator_summary` and `gold_facility_verdicts`.
+- Free Databricks App deployed in dev as `data-readiness-desk`.
 - Mermaid diagrams and decision log.
 - GitHub Actions CI hardened for pre-commit and guarded Databricks validation.
 

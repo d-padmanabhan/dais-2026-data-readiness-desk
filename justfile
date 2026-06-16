@@ -39,6 +39,10 @@ bootstrap-databricks warehouse_id:
 grant-catalog-read principal warehouse_id:
     ./scripts/grant_catalog_read_access.sh --principal {{principal}} --warehouse-id {{warehouse_id}}
 
+# Deploy the Free Databricks App
+deploy-app:
+    ./scripts/deploy_databricks_app.sh
+
 # Query key cached readiness outputs
 query-readiness warehouse_id:
     ./scripts/query_readiness_outputs.sh --warehouse-id {{warehouse_id}}

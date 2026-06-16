@@ -23,3 +23,15 @@ The Node.js server exposes `/api/readiness-summary`, which reads the current cac
 - [server/index.mjs](server/index.mjs): Node.js static server and API placeholder
 - [app.yaml](app.yaml): Databricks Apps command and environment template
 - [package.json](package.json): Node.js app dependencies and scripts
+
+## Deployment
+
+Deploy from the repository root:
+
+```bash
+./scripts/deploy_databricks_app.sh
+```
+
+Current dev app:
+
+[Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
