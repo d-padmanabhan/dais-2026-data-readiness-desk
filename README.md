@@ -10,7 +10,7 @@ Current dev app:
 
 [Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
 
-The app is read-only. It queries cached gold outputs only and does not run live training, live AI extraction, or table writes during the demo.
+The app is read-only. It queries cached gold outputs only and does not run live training, live AI extraction, or table writes during the demo. The URL is not anonymous internet-public; viewers need Databricks workspace access and `CAN_USE` permission on the app.
 
 ## Team and Challenge
 

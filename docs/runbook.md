@@ -285,6 +285,15 @@ Current dev app URL:
 
 [Data Readiness Desk App](https://data-readiness-desk-7474647240221945.aws.databricksapps.com)
 
+Grant viewer access to a workspace user or group:
+
+```bash
+./scripts/grant_databricks_app_access.sh --user john.doe@acme.com
+./scripts/grant_databricks_app_access.sh --group users
+```
+
+The app URL is not anonymous internet-public. External viewers still need Databricks workspace access and `CAN_USE` on the app. For hackathon sharing, grant `CAN_USE` to the smallest appropriate workspace group or named users.
+
 Dry-run acceptance criteria:
 
 - Location lens reads cached facility trust rollups derived from 10,088 shared-table facility rows.

@@ -43,6 +43,14 @@ grant-catalog-read principal warehouse_id:
 grant-app-read warehouse_id:
     ./scripts/grant_catalog_read_access.sh --app-name data-readiness-desk --warehouse-id {{warehouse_id}}
 
+# Grant a workspace user access to open the Free Databricks App
+grant-app-user user:
+    ./scripts/grant_databricks_app_access.sh --user {{user}}
+
+# Grant a workspace group access to open the Free Databricks App
+grant-app-group group:
+    ./scripts/grant_databricks_app_access.sh --group {{group}}
+
 # Deploy the Free Databricks App
 deploy-app:
     ./scripts/deploy_databricks_app.sh

@@ -38,7 +38,19 @@ Current dev app:
 
 ## App Permissions
 
-The app runs as a Databricks-managed service principal. Grant that service principal read access before using the app API:
+There are two permission layers:
+
+1. Viewer access to open the Databricks App.
+2. Unity Catalog read access for the app's Databricks-managed service principal.
+
+Grant viewer access to a workspace user or group:
+
+```bash
+./scripts/grant_databricks_app_access.sh --user john.doe@acme.com
+./scripts/grant_databricks_app_access.sh --group users
+```
+
+Grant the app service principal read access before using the app API:
 
 ```bash
 ./scripts/grant_catalog_read_access.sh \
@@ -49,3 +61,5 @@ The app runs as a Databricks-managed service principal. Grant that service princ
 The helper resolves the app's Databricks-managed service principal and grants `USE CATALOG`, `USE SCHEMA`, and `SELECT` on `data_readiness_desk.pipeline`.
 
 If `/api/readiness-summary` returns HTML instead of JSON, check app logs and verify the app service principal has those grants. HTML usually means the browser received an app/auth error page instead of the JSON API payload.
+
+The app URL is not anonymous internet-public. Viewers still need Databricks workspace access plus `CAN_USE` on the app.
