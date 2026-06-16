@@ -11,6 +11,17 @@ The app must read cached gold outputs only. It should not train models, call AI 
 
 The Node.js server exposes `/api/readiness-summary`, which reads the current cached gold outputs through the Databricks SQL Statement API. The app is intentionally read-only for demo safety.
 
+## Current Demo Features
+
+- Search input for facility/place questions.
+- Location and Facility lens toggle.
+- Facility match selector populated from `silver_facilities_geo`.
+- Dynamic readiness score driven by `gold_facility_verdicts`.
+- Coordinate preview panel for the selected facility.
+- Ranked data-readiness fix recommendations.
+- Simulated score lift for applying the top fix.
+- HMIS state summary and facility verdict evidence tables.
+
 ## Planned Gold Tables
 
 - `data_readiness_desk.pipeline.gold_district_verdicts`

@@ -73,11 +73,12 @@
 
 - [ ] Wire Free Databricks App.
   - [x] Read real cached gold tables.
-  - [x] Add static verdict card.
-  - [ ] Wire verdict card to selected cached output.
+  - [x] Add verdict card.
+  - [x] Wire verdict card to selected cached output.
   - [x] Add table view.
-  - [ ] Add ranked fixes.
-  - [ ] Add before/after toggle from cached rows.
+  - [x] Add map-style coordinate preview.
+  - [x] Add ranked fixes.
+  - [x] Add simulated before/after score lift.
   - [x] Enforce read-only, gold-only queries for current API.
   - [x] Confirm the app runs as a Free Databricks App, not externally hosted web app.
 
@@ -95,11 +96,11 @@
   - [ ] Ranked fix.
   - [ ] Before/after proof.
 
-- [ ] Verify quota safety.
-  - [ ] App reads only.
-  - [ ] No training live.
-  - [ ] No writes live.
-  - [ ] SQL Warehouse started before demo.
+- [x] Verify quota safety.
+  - [x] App reads only.
+  - [x] No training live.
+  - [x] No writes live.
+  - [x] SQL Warehouse started before demo.
 
 ## Done Criteria
 
@@ -108,4 +109,4 @@
 - [x] Demo app deploys.
 - [x] At least one end-to-end cached verdict works.
 - [x] Uncertainty is visible in the UI.
-- [ ] README and runbook match the actual demo path.
+- [x] README and runbook match the actual demo path.

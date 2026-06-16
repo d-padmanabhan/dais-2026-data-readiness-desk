@@ -100,7 +100,7 @@ async function executeStatement(statement) {
 }
 
 async function buildReadinessSummary() {
-  const [hmisSummary, facilityVerdicts] = await Promise.all([
+  const [hmisSummary, facilityVerdicts, facilityMatches] = await Promise.all([
     executeStatement(`
       SELECT
         state_name,
@@ -115,6 +115,7 @@ async function buildReadinessSummary() {
     executeStatement(`
       SELECT
         source_state_name,
+        source_state_normalized,
         total_facilities,
         valid_coordinate_facilities,
         numeric_score,
@@ -125,12 +126,36 @@ async function buildReadinessSummary() {
       ORDER BY numeric_score ASC
       LIMIT 8
     `),
+    executeStatement(`
+      SELECT
+        f.unique_id,
+        f.name,
+        f.source_state_name,
+        f.source_state_normalized,
+        f.pincode,
+        f.latitude,
+        f.longitude,
+        f.has_valid_coordinates,
+        f.has_pincode,
+        f.has_capability_text,
+        COALESCE(v.numeric_score, 0.0) AS numeric_score,
+        COALESCE(v.band, 'red') AS band,
+        COALESCE(v.binding_reason, 'Location: facility has not been assigned to a trusted geography yet') AS binding_reason,
+        COALESCE(v.data_caution, 'state_rollup_before_district_polygon_assignment') AS data_caution
+      FROM data_readiness_desk.pipeline.silver_facilities_geo f
+      LEFT JOIN data_readiness_desk.pipeline.gold_facility_verdicts v
+        ON f.source_state_normalized = v.source_state_normalized
+      WHERE f.name IS NOT NULL
+      ORDER BY f.name
+      LIMIT 500
+    `),
   ]);
 
   return {
     status: "ok",
     hmisSummary,
     facilityVerdicts,
+    facilityMatches,
   };
 }
 
