@@ -228,7 +228,6 @@ Gold tables:
 - `gold_district_verdicts`
 - `gold_fix_ranking`
 - `gold_coverage_predictions`
-- `gold_hmis_state_indicator_summary`
 
 ## Data Quality Position
 

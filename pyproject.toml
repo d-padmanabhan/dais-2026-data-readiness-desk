@@ -67,7 +67,7 @@ max-line-length = 120
 
 [tool.pylint.messages_control]
 disable = [
-  "import-error", # Databricks provides PySpark in the runtime; local installs stay lightweight.
+  "import-error",           # Databricks provides PySpark in the runtime; local installs stay lightweight.
   "too-few-public-methods",
 ]
 

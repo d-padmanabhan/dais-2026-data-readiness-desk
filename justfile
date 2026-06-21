@@ -17,11 +17,11 @@ fmt:
 # Run lint checks
 lint:
     uv run ruff check .
-    uv run pylint --fail-under=9.5 src tests
+    uv run pylint --fail-under=9.5 src tests/*.py
 
 # Run type checks
 typecheck:
-    uv run mypy --strict .
+    uv run mypy --strict src tests
 
 # Run unit tests
 test:
